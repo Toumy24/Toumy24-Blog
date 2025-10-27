@@ -1,0 +1,10 @@
+[build]
+  command = "hugo --gc --minify"
+  publish = "public"
+
+[build.environment]
+  HUGO_VERSION = "0.124.0"
+  TZ = "Asia/Shanghai"  # 设置时区
+
+[context.production.environment]
+  HUGO_ENV = "production"
