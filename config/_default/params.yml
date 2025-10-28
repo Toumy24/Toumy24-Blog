@@ -184,7 +184,7 @@ sort_order:
 # CSS
 ########################################
 
-anchor_icon: # default use '#' icon, you can use a hexadecimal representation of fontawesome or icon_font, like 'f0c1', you can also use false to hide anchor icon
+anchor_icon: false # default use '#' icon, you can use a hexadecimal representation of fontawesome or icon_font, like 'f0c1', you can also use false to hide anchor icon
 
 reimu_cursor:
   enable: false
