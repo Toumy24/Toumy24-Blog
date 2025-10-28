@@ -8,8 +8,8 @@ lastmod: 2022-06-09T20:12:52+08:00
 
 ## 本站信息
 
-- 站名： 拔剑Sketon
-- 站长： 拔剑Sketon
+- 站名： Toumy24 Blog
+- 站长： Toumy24
 
 ## 申请方法
 

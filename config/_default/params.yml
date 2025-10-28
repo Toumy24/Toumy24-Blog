@@ -7,16 +7,16 @@
 menu:
   - name: home
     url: ""
-    icon: # default use taichi icon, you can use a hexadecimal representation of fontawesome or icon_font, like 'f0c1'
+    icon: e3af # default use taichi icon, you can use a hexadecimal representation of fontawesome or icon_font, like 'f0c1'
   - name: archives
     url: "archives"
-    icon:
+    icon: f02e
   - name: about
     url: "about"
-    icon:
+    icon: f02b
   - name: friend
     url: "friend"
-    icon:
+    icon: f0c1
 
 mainSections: ["post"]
 # 年，月，日及时间的格式化样式
@@ -99,9 +99,9 @@ footer:
   count: true
   busuanzi: true
   icon:
-    url: "../images/taichi.png" # this path is relative to the css/main.css, so it needs to go up one level to reach the images folder
+    url: "../bootstrap/dot.svg" # this path is relative to the css/main.css, so it needs to go up one level to reach the images folder
     rotate: false
-    mask: false # whether to use the images as a mask
+    mask: true # whether to use the images as a mask
 
 # Sidebar
 sidebar: right
@@ -193,7 +193,7 @@ reimu_cursor:
     pointer: ../images/cursor/reimu-cursor-pointer.png
     text: ../images/cursor/reimu-cursor-text.png
 
-icon_font: 4552607_4k4bc36ef96
+icon_font: false
 
 # Font loading strategy
 # Custom Font -> Google Fonts -> Local FallBack Font
@@ -235,7 +235,7 @@ dark_mode:
   # true means that the dark mode is enabled by default
   # false means that the dark mode is disabled by default
   # auto means that the dark mode is automatically switched according to the system settings
-  enable: false # true | false | auto
+  enable: auto # true | false | auto
 
 ########################################
 # Analytics
@@ -500,10 +500,10 @@ clipboard:
 top:
   enable: true
   position: right # left or right
-  # icon:
-  #   url: "../images/taichi.png" # this path is relative to the css/main.css, so it needs to go up one level to reach the images folder
-  #   rotate: true
-  #   mask: true # whether to use the images as a mask
+  icon:
+    url: "../bootstrap/arrow-up-circle.svg" # this path is relative to the css/main.css, so it needs to go up one level to reach the images folder
+    rotate: false
+    mask: true # whether to use the images as a mask
 
 # whether to display the notification when the article is outdated
 outdate:
