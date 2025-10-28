@@ -3,20 +3,20 @@
   --footer-icon: url(../images/taichi.png);
   --top-icon: url(../images/taichi.png);
   --sponsor-icon: url(../images/taichi.png);
-  --cursor-default: url(../images/cursor/reimu-cursor-default.png), auto;
-  --cursor-pointer: url(../images/cursor/reimu-cursor-pointer.png), pointer;
-  --cursor-text: url(../images/cursor/reimu-cursor-text.png), text;
+  --cursor-default: auto;
+  --cursor-pointer: pointer;
+  --cursor-text: text;
 }
 
 :root {
-  --red-0: #ff0000;
-  --red-1: #ff5252;
-  --red-2: #ff7c7c;
-  --red-3: #ffafaf;
-  --red-4: #ffd0d0;
-  --red-5: #ffecec;
-  --red-5-5: #fff3f3;
-  --red-6: #fff7f7;
+  --red-0: #ddaacc;
+  --red-1: #e3b8d5;
+  --red-2: #e8c6dd;
+  --red-3: #eed5e6;
+  --red-4: #f4e3ee;
+  --red-5: #f9f1f7;
+  --red-5-5: #fcf8fb;
+  --red-6: #ffffff;
   --grey-9: #888;
   --grey-7: var(--color-default);
   --color-archive-year: black;
@@ -34,8 +34,8 @@
   --color-meta-shadow: var(--red-6);
   --color-hover-shadow: rgba(120, 120, 120, 0.15);
   --color-h2-after: var(--red-1);
-  --color-red-6-shadow: rgba(255, 78, 78, 0.6);
-  --color-red-3-shadow: rgba(255, 78, 78, 0.3);
+  --color-red-6-shadow: rgba(221, 170, 204, 0.6);
+  --color-red-3-shadow: rgba(221, 170, 204, 0.3);
   --highlight-nav: #e6e6e6;
   --highlight-scrollbar: #d6d6d6;
   --highlight-background: #f7f7f7;
@@ -59,10 +59,10 @@
 
 [data-theme="dark"]:root {
   --red-0: var(--red-1);
-  --red-4: rgba(255, 208, 208, 0.5);
-  --red-5: rgba(255, 228, 228, 0.15);
-  --red-5-5: rgba(255, 236, 236, 0.05);
-  --red-6: rgba(255, 243, 243, 0.2);
+  --red-4: rgba(244, 227, 238, 0.5);
+  --red-5: rgba(249, 241, 247, 0.15);
+  --red-5-5: rgba(252, 248, 251, 0.05);
+  --red-6: rgba(255, 255, 255, 0.2);
   --color-archive-year: #999;
   --color-default: #999;
   --color-border: var(--red-5);

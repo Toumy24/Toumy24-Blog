@@ -7,8 +7,8 @@
     <generator>Hugo</generator>
     <language>zh-cn</language>
     
-    <managingEditor>xxx@example.com (D-Sketon)</managingEditor>
-    <webMaster>xxx@example.com (D-Sketon)</webMaster>
+    <managingEditor>Toumy24@outlook.com (Toumy24)</managingEditor>
+    <webMaster>Toumy24@outlook.com (Toumy24)</webMaster>
     
     <copyright>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</copyright>
     
@@ -25,10 +25,10 @@
       <title>欢迎来到我的博客</title>
       <link>http://localhost:1313/post/welcome/</link>
       <pubDate>Mon, 27 Oct 2025 00:00:00 &#43;0000</pubDate>
-      <author>xxx@example.com (D-Sketon)</author>
+      <author>Toumy24@outlook.com (Toumy24)</author>
       <guid>http://localhost:1313/post/welcome/</guid>
       <description>
-        <![CDATA[<h1>欢迎来到我的博客</h1><p>作者：D-Sketon（xxx@example.com）</p>
+        <![CDATA[<h1>欢迎来到我的博客</h1><p>作者：Toumy24（Toumy24@outlook.com）</p>
         
           <h2 id="你好世界">
 <a class="header-anchor" href="#%e4%bd%a0%e5%a5%bd%e4%b8%96%e7%95%8c"></a>
@@ -46,10 +46,10 @@
       <title>Hello World</title>
       <link>http://localhost:1313/post/hello/</link>
       <pubDate>Wed, 15 Mar 2023 11:00:00 -0700</pubDate>
-      <author>xxx@example.com (D-Sketon)</author>
+      <author>Toumy24@outlook.com (Toumy24)</author>
       <guid>http://localhost:1313/post/hello/</guid>
       <description>
-        <![CDATA[<h1>Hello World</h1><p>作者：D-Sketon（xxx@example.com）</p>
+        <![CDATA[<h1>Hello World</h1><p>作者：Toumy24（Toumy24@outlook.com）</p>
         
           <p>💘 博麗 霊夢 💘</p>
         
