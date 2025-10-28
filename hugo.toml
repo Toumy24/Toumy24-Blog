@@ -1,7 +1,7 @@
 baseURL = 'https://blog.24toumy.top'
 languageCode = 'zh-CN'
 defaultContentLanguage = 'zh-CN'
-title = "我的博客"
+title = "Toumy24's Blog"
 theme = "reimu"
 
 [languages]

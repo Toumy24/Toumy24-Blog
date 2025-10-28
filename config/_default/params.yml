@@ -29,7 +29,7 @@ timeFormat: "2006-01-02 15:04:05"
 author: Toumy24
 email: Toumy24@outlook.com
 description: "你想何出怎样的意味"
-subtitle: "少女祈祷中..."
+subtitle: "光芒，就在那里。"
 
 banner: "images/banner.webp"
 # You can also write it in the form of the following url
@@ -98,10 +98,10 @@ footer:
   powered: true
   count: true
   busuanzi: true
-  # icon:
-  #   url: "../images/taichi.png" # this path is relative to the css/main.css, so it needs to go up one level to reach the images folder
-  #   rotate: true
-  #   mask: true # whether to use the images as a mask
+  icon:
+    url: "../images/taichi.png" # this path is relative to the css/main.css, so it needs to go up one level to reach the images folder
+    rotate: false
+    mask: false # whether to use the images as a mask
 
 # Sidebar
 sidebar: right
@@ -656,8 +656,8 @@ material_theme:
 
 internal_theme:
   light:
-    --red-0: '#ddaacc'
-    --red-1: '#e3b8d5'
+    --red-0: '#E2A7CE'
+    --red-1: '#ddaacc'
     --red-2: '#e8c6dd'
     --red-3: '#eed5e6'
     --red-4: '#f4e3ee'

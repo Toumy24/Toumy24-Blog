@@ -9,8 +9,8 @@
 }
 
 :root {
-  --red-0: #ddaacc;
-  --red-1: #e3b8d5;
+  --red-0: #E2A7CE;
+  --red-1: #ddaacc;
   --red-2: #e8c6dd;
   --red-3: #eed5e6;
   --red-4: #f4e3ee;
@@ -953,24 +953,8 @@ a, .main-nav-icon, .popup-btn-close, button {
   animation: rotate-all 3s linear infinite;
 }
 
-@supports (-webkit-mask: var(--footer-icon) no-repeat center/80%) {
-  .footer-info-sep {
-    background-color: var(--red-1);
-    -webkit-mask: var(--footer-icon) no-repeat center/80%;
-  }
-}
-
-@supports (mask: var(--footer-icon) no-repeat center/80%) {
-  .footer-info-sep {
-    background-color: var(--red-1);
-    mask: var(--footer-icon) no-repeat center/80%;
-  }
-}
-
-@supports not ((mask: var(--footer-icon) no-repeat center/80%) and (-webkit-mask: var(--footer-icon) no-repeat center/80%)) {
-  .footer-info-sep {
-    background: var(--footer-icon) no-repeat center/80%;
-  }
+.footer-info-sep {
+  background: var(--footer-icon) no-repeat center/80%;
 }
 
 .article-copyright {
