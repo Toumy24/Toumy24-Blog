@@ -494,7 +494,7 @@ clipboard:
     pt-BR: Falha ao copiar (ﾟ⊿ﾟ)ﾂ
   copyright:
     enable: false
-    count: 50 # The number of characters when the copyright is displayed
+    count: 1000 # The number of characters when the copyright is displayed
     license_type: by-nc-sa # https://creativecommons.org/licenses
 
 # Back To Top
