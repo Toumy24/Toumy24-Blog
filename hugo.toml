@@ -1,5 +1,5 @@
 baseURL = 'https://blog.24toumy.top'
-title = 'Toumy24's Blog'
+title = 'Toumy24\'s Blog'
 theme = "reimu"
 languageCode = 'zh-CN'
 defaultContentLanguage = 'zh-CN'
