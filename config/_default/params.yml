@@ -349,7 +349,6 @@ waline:
   wordLimit: 0
   pageSize: 10
   pageview: true
-  cssUrl: /walinecss/waline.css
 
 
 # https://twikoo.js.org
