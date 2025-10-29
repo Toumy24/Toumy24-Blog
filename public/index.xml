@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Toumy24&#39;s Blog</title>
+    <link>http://localhost:1313/</link>
+    <description>Recent content from Toumy24&#39;s Blog</description>
+    <generator>Hugo</generator>
+    <language>zh-cn</language>
+    
+    <managingEditor>Toumy24@outlook.com (Toumy24)</managingEditor>
+    <webMaster>Toumy24@outlook.com (Toumy24)</webMaster>
+    
+    <copyright>本博客所有文章除特别声明外，均采用 BY-NC-SA 许可协议。转载请注明出处！</copyright>
+    
+    <lastBuildDate>Mon, 27 Oct 2025 00:00:00 +0000</lastBuildDate>
+    
+    
+    <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss&#43;xml" />
+    
+
+    
+    
+
+    <item>
+      <title>欢迎来到我的博客</title>
+      <link>http://localhost:1313/post/welcome/</link>
+      <pubDate>Mon, 27 Oct 2025 00:00:00 &#43;0000</pubDate>
+      <author>Toumy24@outlook.com (Toumy24)</author>
+      <guid>http://localhost:1313/post/welcome/</guid>
+      <description>
+        <![CDATA[<h1>欢迎来到我的博客</h1><p>作者：Toumy24（Toumy24@outlook.com）</p>
+        
+          <h2 id="你好世界">
+<a class="header-anchor" href="#%e4%bd%a0%e5%a5%bd%e4%b8%96%e7%95%8c"></a>
+你好，世界！
+</h2><p>这是我的第一篇博客文章。</p>
+        
+        <hr><p>本文2025-10-27首发于<a href='http://localhost:1313/'>Toumy24's Blog</a>，最后修改于2025-10-27</p>]]>
+      </description>
+      
+    </item>
+    
+  </channel>
+</rss>
