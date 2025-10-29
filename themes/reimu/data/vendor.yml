@@ -24,7 +24,7 @@ js:
     src: webcache|valine@1.5.1/dist/Valine.min.js
     integrity: sha384-3ma91AExDeMAZ1rjTjaP8V2A2obQE+s5ltKRwYlwdpArz9xVbp0tF3b0VV2ACNPn
   waline:
-    src: local|@waline/client@2.15.8/dist/waline.mjs
+    src: :local|@waline/client@2.15.8/dist/waline.mjs
     integrity: sha384-9sbqJjrfGjbkI6/PI4nU/MvBfEmkkPC4YK9I4zBeMIf1CVCZdCMH/KinBEAZII/5
   twikoo:
     src: webcache|twikoo@1.6.44/dist/twikoo.all.min.js
@@ -106,7 +106,7 @@ css:
     src: webcache|katex@0.16.24/dist/katex.min.css
     integrity: sha384-tTgKLjMYmJr94v8qu2PE5MUGSMbyN2xiH266JUB3gpm8vnnJywd1dWSOEfrFz+YI
   waline:
-    src: local|@waline/client@2.15.8/dist/waline.css
+    src: :local|@waline/client@2.15.8/dist/waline.css
     integrity: sha384-vltfZtesCdl6NYVcFVcjEaIi5RpNvZe9t7fXvq8twVtcoy+Ub9QgnxUYJmwOhYCK
   gitalk:
     src: webcache|gitalk@1.8.0/dist/gitalk.css
