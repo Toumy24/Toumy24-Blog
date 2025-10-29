@@ -656,7 +656,7 @@ material_theme:
 
 internal_theme:
   light:
-    --red-0: '#E2A7CE'
+    --red-0: '#e2a7ce'
     --red-1: '#ddaacc'
     --red-2: '#e8c6dd'
     --red-3: '#eed5e6'
