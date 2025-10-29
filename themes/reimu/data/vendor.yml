@@ -3,7 +3,7 @@ cdn_jsdelivr_npm: https://cdn.jsdelivr.net/npm/
 fastly_jsdelivr_gh: https://fastly.jsdelivr.net/gh/
 fastly_jsdelivr_npm: https://fastly.jsdelivr.net/npm/
 unpkg: https://blog.24toumy.top/resources/
-webcache: https://npm.webcache.cn/
+webcache: https://blog.24toumy.top/resources/
 local: /resources/ # Local resources path. If your baseURL contains a subdirectory, you need to add it here.
 
 
