@@ -1,4 +1,4 @@
-baseURL = 'https://toumy24-blog.vercel.app'
+baseURL = 'https://blog.24toumy.top'
 title = 'My New Hugo Site'
 theme = "reimu"
 languageCode = 'zh-CN'
