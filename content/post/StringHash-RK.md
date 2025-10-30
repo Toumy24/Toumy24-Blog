@@ -78,7 +78,7 @@ $$
 
 $$
 H_1(T)=\sum_{k=0}^{n-1}ord(t_k)\times B_1^{n-1-k}\mod M_1\newline
-H_2(P)=\sum_{k=0}^{n-1}ord(t_k)\times B_2^{n-1-k}\mod M_2
+H_2(T)=\sum_{k=0}^{n-1}ord(t_k)\times B_2^{n-1-k}\mod M_2
 $$
 
 #### 预计算
@@ -145,28 +145,28 @@ int len(char* s) {
 }
 
 // Rabin-Karp算法
-int rk(char* text, int n, char* substr, int m) {
+int rk(char* T, int n, char* P, int m) {
     if (m == 0) return 0;
     if (n < m) return -1;
 
     ll ph1=0, ph2=0, wh1=0, wh2=0, p1=1, p2=1;
     for (int i=0; i<m; i++) {
-        ph1 = (ph1*B1 + substr[i]) % M1;
-        ph2 = (ph2*B2 + substr[i]) % M2;
-        wh1 = (wh1*B1 + text[i]) % M1;
-        wh2 = (wh2*B2 + text[i]) % M2;
+        ph1 = (ph1*B1 + P[i]) % M1;
+        ph2 = (ph2*B2 + P[i]) % M2;
+        wh1 = (wh1*B1 + T[i]) % M1;
+        wh2 = (wh2*B2 + T[i]) % M2;
         if (i) p1 = (p1*B1) % M1, p2 = (p2*B2) % M2;
     }
 
     for (int i=0; i<=n-m; i++) {
         if (wh1 == ph1 && wh2 == ph2) {
             int j = 0;
-            while (j < m && text[i+j] == substr[j]) j++;
+            while (j < m && T[i+j] == P[j]) j++;
             if (j == m) return i;
         }
         if (i < n-m) {
-            wh1 = (B1*(wh1 - text[i]*p1) + text[i+m]) % M1;
-            wh2 = (B2*(wh2 - text[i]*p2) + text[i+m]) % M2;
+            wh1 = (B1*(wh1 - T[i]*p1) + T[i+m]) % M1;
+            wh2 = (B2*(wh2 - T[i]*p2) + T[i+m]) % M2;
             if (wh1 < 0) wh1 += M1; if (wh2 < 0) wh2 += M2;
         }
     }
