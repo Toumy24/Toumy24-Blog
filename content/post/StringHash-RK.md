@@ -1,5 +1,5 @@
 ﻿---
-title: "字符串哈希与Rabin-Karp算法"
+title: "字符串哈希与Rabin-Karp子串搜索算法"
 date: 2025-10-30
 tags: ["算法","哈希","字符串","子串搜索","Rabin-Karp算法"]
 categories: ["算法原理"]
@@ -137,14 +137,7 @@ $$
 根据上述数学过程，我们可以用C++实现Rabin-Karp算法：
 
 ```c++
-// 手动实现的字符串长度函数
-int len(char* s) {
-    int len = 0;
-    while (s[len] != '\0') len++;
-    return len;
-}
-
-// Rabin-Karp算法
+// Rabin-Karp子串搜索算法
 int rk(char* T, int n, char* P, int m) {
     if (m == 0) return 0;
     if (n < m) return -1;
