@@ -46,14 +46,14 @@ Horspool算法是一种高效的字符串子串搜索算法，它是Boyer-Moore�
 ```c++
 int horspool(char *T, int n, char *P, int m) {
     int i, j;
-    for (i = 0; i < 256; i++) bc[i] = m;
-    for (i = 0; i < m-1; i++) bc[P[i]] = m-1-i;
+    for (i = 0; i < 256; i++) skip[i] = m;
+    for (i = 0; i < m-1; i++) skip[P[i]] = m-1-i;
     
     i = 0;
     while (i <= n-m) {
         for (j = m-1; j >= 0 && P[j] == T[i+j]; j--);
         if (j < 0) return i;
-        i += bc[T[i+m-1]];
+        i += skip[T[i+m-1]];
     }
     return -1;
 }
