@@ -1,6 +1,7 @@
 ﻿---
 title: "字符串哈希与Rabin-Karp子串搜索算法"
 date: 2025-10-30
+timezone: UTC+8
 tags: ["算法","哈希","字符串","子串搜索","Rabin-Karp算法"]
 categories: ["算法原理"]
 draft: false
@@ -52,7 +53,7 @@ $$
 
 ## 字符串哈希在子串搜索中的应用——Rabin-Karp算法
 
->核心思想：滚动哈希（Rolling Hash）
+>核心思想：滚动哈希（Rolling Hash）  
 >滚动哈希可以在 $O(1)$ 的时间内计算出子串的哈希值。
 
 滚动哈希其实就是一种前缀和的应用，通过递推关系，使用前一次计算的值推导下一个值。
