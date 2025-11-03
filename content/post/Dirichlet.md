@@ -21,3 +21,10 @@ $$
 (f * g)(6) = \sum_{d|n} f(d)g(\frac{6}{d}) = f(1)g(6) + f(2)g(3) + f(3)g(2) + f(6)g(1) = 1\cdot6 + 1\cdot3 + 1\cdot2 + 1\cdot1 = 12
 $$
 
+### 性质
+
+- 交换律：$f \ast g = g \ast f$
+- 结合律：$(f \ast g) \ast h = f \ast (g \ast h)$
+- 分配律：$(f + g) \ast h = f \ast h + g \ast h$
+- 单位元：$f \ast \varepsilon = \varepsilon \ast f = f$，其中 $\varepsilon(n) = [n = 1]$ 是卷积单位元。
+
