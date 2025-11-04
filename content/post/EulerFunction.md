@@ -22,6 +22,7 @@ math: true
 - 当 $n$ 为奇数时，有 $\varphi(2n) = \varphi(n)$
 - 对于质数 $p$ ，有 $\varphi(p^k) = p^{k-1}(p-1)$
 - $n = \sum_{d|n} \varphi(d)$
+- 卷积恒等式： $ \varphi = \mu \cdot id$ ，其中 $\mu$ 是[莫比乌斯函数]({{< ref "Mobius.md" >}})。
 
 ### 欧拉函数的计算
 
