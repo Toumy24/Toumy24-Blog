@@ -387,10 +387,10 @@ giscus:
 ########################################
 
 algolia_search:
-  enable: false
-  appID:
-  apiKey:
-  indexName:
+  enable: true
+  appID: 1OOW7FHQ5N
+  apiKey: d88b0df769053e05a1a36670724a4b0b
+  indexName: Toumy24
   hits:
     per_page: 10
 

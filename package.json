@@ -1,0 +1,26 @@
+{
+  "name": "toumy24-blog",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/Toumy24/Toumy24-Blog#readme",
+  "bugs": {
+    "url": "https://github.com/Toumy24/Toumy24-Blog/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Toumy24/Toumy24-Blog.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "build": "hugo",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "algolia": "atomic-algolia",
+    "postbuild": "npm run algolia"
+  },
+  "dependencies": {
+    "atomic-algolia": "^0.3.19"
+  }
+}
