@@ -558,13 +558,18 @@ share:
 
 # show categories card on home page
 home_categories:
-  enable: false
+  enable: true
   content:
-    - categories: # string (single-layer category) or array (multi-layer category)
+    - categories: 算法原理 # string (single-layer category) or array (multi-layer category)
       cover: # empty means random cover
-    - categories:
+    - categories: 乐理
       cover:
-
+    - categories: 数学
+      cover:
+    - categories: 前端
+      cover:
+    - categories: 后端
+      cover:
 ########################################
 # Experimental features
 ########################################
