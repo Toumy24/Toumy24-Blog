@@ -565,7 +565,7 @@ home_categories:
     - categories: 计算机语言
       cover:
     - categories: 音乐
-    - cover: coverimg/8.jpg
+    - cover: "coverimg/8.jpg"
 
 ########################################
 # Experimental features
