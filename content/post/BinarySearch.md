@@ -3,7 +3,9 @@ title: "二分查找的原理及实现"
 date: 2025-10-29
 timezone: UTC+8
 tags: ["算法","二分查找"]
-categories: ["算法原理"]
+categories: 
+  - 算法与数学
+  - 算法
 draft: false
 math: true
 ---

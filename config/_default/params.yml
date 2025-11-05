@@ -560,16 +560,13 @@ share:
 home_categories:
   enable: true
   content:
-    - categories: 算法原理 # string (single-layer category) or array (multi-layer category)
+    - categories: 算法与数学 # string (single-layer category) or array (multi-layer category)
       cover: # empty means random cover
-    - categories: 乐理
+    - categories: 计算机语言
       cover:
-    - categories: 数学
-      cover:
-    - categories: 前端
-      cover:
-    - categories: 后端
-      cover:
+    - categories: 音乐
+    - cover: coverimg/8.jpg
+
 ########################################
 # Experimental features
 ########################################

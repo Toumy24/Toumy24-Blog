@@ -3,7 +3,9 @@ title: "基础数论概念"
 date: 2025-11-02T16:00:00+08:00
 timezone: UTC+8
 tags: ["算法","数论","基础概念"]
-categories: ["数学"]
+categories: 
+  - 算法与数学
+  - 数学
 draft: false
 math: true
 ---

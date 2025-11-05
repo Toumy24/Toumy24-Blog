@@ -3,7 +3,9 @@ title: "三种基础素数搜索算法"
 date: 2025-11-01
 timezone: UTC+8
 tags: ["算法","筛法","线性筛","埃拉托斯特尼筛","素数","数论"]
-categories: ["算法原理"]
+categories: 
+  - 算法与数学
+  - 算法
 draft: false
 math: true
 ---

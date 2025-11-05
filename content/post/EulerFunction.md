@@ -3,7 +3,9 @@ title: "数论：欧拉函数"
 date: 2025-11-02T18:00:00+08:00
 timezone: UTC+8
 tags: ["算法","数论","欧拉函数","欧拉反演"]
-categories: ["数学"]
+categories: 
+  - 算法与数学
+  - 数学
 draft: false
 math: true
 ---
