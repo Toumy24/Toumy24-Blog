@@ -1,5 +1,5 @@
 ﻿---
-title: "前端教程-JavaScript 篇【1】基础语法"
+title: "前端教程-JavaScript 篇【1】基础概念"
 date: 2025-11-05T14:00:00+08:00
 timezone: UTC+8
 tags: ["前端","JavaScript","基础语法"]
@@ -37,7 +37,7 @@ JavaScript可以直接嵌入进HTML中，只需要将JavaScript代码放在`<scr
 
 一般建议将JavaScript代码放在`<head>`标签和`<body>`标签中。
 
-对于单独的JavaScript文件，可以将文件名后缀改为`.js`，并在`<script>`标签中指定文件路径：
+对于单独的JavaScript文件，可以在`<script>`标签中指定文件路径：
 
 ```html
 <!DOCTYPE html>
@@ -71,3 +71,10 @@ JavaScript可以直接嵌入进HTML中，只需要将JavaScript代码放在`<scr
 </body>
 </html>
 ```
+
+生产实践中，不建议将全部的JS代码写在HTML中，除非需要实现的功能非常简单；否则建议将JS代码分离到单独的JS文件中，然后通过`<script>`标签引入。
+
+那么对于单独的JS文件，有没有什么程序结构呢？  
+**并没有。**
+
+JS是一个灵活的动态语言，在编写过程中几乎没有什么固定的或被约束的程序结构，尽管它的语法和C/C++等C系语言相差无几，但实际使用起来更像Python。

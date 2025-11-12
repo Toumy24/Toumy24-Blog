@@ -1,0 +1,553 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人生已完成清单</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .description {
+            font-size: 1.1rem;
+            color: #7f8c8d;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .stats-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            min-width: 150px;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background: #ecf0f1;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .search-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        #search {
+            width: 100%;
+            max-width: 500px;
+            padding: 12px 20px;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        #search:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        .categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+        
+        .category-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .category-btn:hover, .category-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        
+        .checklist-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .category-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+        }
+        
+        .category-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f2f6;
+            color: #2c3e50;
+        }
+        
+        .checklist {
+            list-style: none;
+        }
+        
+        .checklist-item {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .checklist-item input {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .checklist-item label {
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+        }
+        
+        .checklist-item input:checked + label {
+            text-decoration: line-through;
+            color: #7f8c8d;
+        }
+        
+        .actions {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 0 5px;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #95a5a6;
+        }
+        
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .checklist-container {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>人生已完成清单</h1>
+            <p class="description">勾选您已完成的人生经历，记录并回顾您的精彩人生旅程</p>
+            
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-number" id="completed-count">0</div>
+                    <div class="stat-label">已完成</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="total-count">0</div>
+                    <div class="stat-label">总项目</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="percentage">0%</div>
+                    <div class="stat-label">完成度</div>
+                </div>
+            </div>
+            
+            <div class="progress-bar">
+                <div class="progress" id="progress-bar"></div>
+            </div>
+        </header>
+        
+        <div class="search-container">
+            <input type="text" id="search" placeholder="搜索人生经历...">
+        </div>
+        
+        <div class="categories">
+            <button class="category-btn active" data-category="all">全部</button>
+            <button class="category-btn" data-category="情感">情感经历</button>
+            <button class="category-btn" data-category="校园">校园生活</button>
+            <button class="category-btn" data-category="社交">社交活动</button>
+            <button class="category-btn" data-category="个人">个人成长</button>
+            <button class="category-btn" data-category="旅行">旅行探索</button>
+            <button class="category-btn" data-category="爱好">兴趣爱好</button>
+        </div>
+        
+        <div class="checklist-container" id="checklist-container">
+            <!-- 清单内容将通过JavaScript动态生成 -->
+        </div>
+        
+        <div class="actions">
+            <button class="btn" id="select-all">全选</button>
+            <button class="btn btn-secondary" id="clear-all">清空</button>
+            <button class="btn" id="save-btn">保存进度</button>
+        </div>
+        
+        <footer>
+            <p>人生已完成清单 &copy; 2023 - 记录您的精彩人生旅程</p>
+        </footer>
+    </div>
+
+    <script>
+        // 清单数据，按照类别分组
+        const checklistData = [
+            {
+                category: "情感",
+                title: "情感经历",
+                items: [
+                    "送礼物", "被送礼物", "暗恋", "明恋", "失恋", "表白", "被表白", 
+                    "放下一个人", "有过遗憾", "爱而不得", "双向奔赴", "当海王", "拒绝他人表白", 
+                    "表白被拒", "被渣", "犯过傻", "装糊涂", "被坚定选择", "异地恋", "异国恋"
+                ]
+            },
+            {
+                category: "校园",
+                title: "校园生活",
+                items: [
+                    "犯校规", "打架", "迟到", "旷课", "上课睡觉", "打架被叫家长", 
+                    "考试不及格", "考试第一名", "当班干部", "竞选学生会", 
+                    "被老师点名表扬", "被老师点名批评", "全校表扬", 
+                    "通宵补作业", "写论文", "参加比赛", "拍毕业照", 
+                    "和同学打水仗", "社团活动", "组建社团", "加入校队"
+                ]
+            },
+            {
+                category: "个人",
+                title: "个人成长",
+                items: [
+                    "留长发", "剪短发", "染发", "漂发", "烫发", "化妆", "做美甲", 
+                    "喝酒", "抽烟", "纹身", "去清吧", "和朋友去KTV", "断片", 
+                    "失眠", "睡一天", "吵架", "绝交", "晚上一个人哭", "捐血", 
+                    "住院", "做手术", "晕倒", "会做饭", "做一桌菜", "做饭给家人", 
+                    "做甜品给喜欢的人", "社死过", "被骗", "撒谎", "成功", 
+                    "改掉一个坏习惯", "拿驾照", "当伴娘/郎", "面试成功", "发表成果", 
+                    "创业", "进公司工作", "做未来规划", "搬家", "转学"
+                ]
+            },
+            {
+                category: "社交",
+                title: "社交与人际",
+                items: [
+                    "有超过10年的好朋友", "有个无条件可信任的朋友", "买花", "被送花", 
+                    "给自己买礼物", "向陌生人吐露心声", "拥有要好的异性朋友", 
+                    "谈恋爱", "被背叛", "被伤害", "道歉", "释怀", "失望", 
+                    "和网友见面", "在朋友家过夜", "办生日会"
+                ]
+            },
+            {
+                category: "旅行",
+                title: "旅行与探索",
+                items: [
+                    "一个人散步", "夜跑", "深夜散心", "一个人出去吃饭", "一个人看电影", 
+                    "一个人去酒吧", "一个人过生日", "一个人逛超市", "一个人去图书馆", 
+                    "一个人看病", "一个人去唱歌", "一个人出门逛", "一个人在外难过", 
+                    "出国", "一个人旅游", "跟朋友旅游", "看雪", "看海", "看日出", 
+                    "看日落", "自驾游", "看极光", "独自坐飞机"
+                ]
+            },
+            {
+                category: "爱好",
+                title: "兴趣爱好与体验",
+                items: [
+                    "摄影", "买相机", "会一种乐器", "有超过5年的兴趣爱好", 
+                    "参加志愿活动", "自己一个人在外面住过", "看鬼片", "去密室", 
+                    "去鬼屋", "去游乐场", "去看现场演唱会", "去音乐节", "偶遇明星", 
+                    "去签售会", "在图书馆待一天", "兼职", "打工", "看画展", 
+                    "捐款", "淋雨", "种花", "养宠物", "泡温泉", "跳伞", "坐过山车", 
+                    "蹦极", "骑马", "卡丁车", "攀岩", "游泳", "滑雪", "滑冰", 
+                    "旱冰", "滑板", "去野炊", "登山", "给父母买衣服", "摆地摊", 
+                    "写信", "给自己写信", "拼拼图", "健身", "买名牌", "开网店", 
+                    "练字", "沉迷游戏", "放孔明灯", "逛小吃街", "买唱片", 
+                    "认识不同国籍的人", "坐摩天轮", "擅长一项运动", 
+                    "上电视", "上报纸", "登台演出", "主持节目", "演讲", 
+                    "野性消费", "买东西被宰", "获奖", "学一种语言", "写书", 
+                    "写诗", "写日记", "写剧本", "写歌", "拍影片", "拍写真"
+                ]
+            }
+        ];
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', function() {
+            // 生成清单HTML
+            generateChecklist();
+            
+            // 更新统计信息
+            updateStats();
+            
+            // 添加事件监听器
+            document.getElementById('search').addEventListener('input', filterItems);
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', filterByCategory);
+            });
+            document.getElementById('select-all').addEventListener('click', selectAll);
+            document.getElementById('clear-all').addEventListener('click', clearAll);
+            document.getElementById('save-btn').addEventListener('click', saveProgress);
+            
+            // 加载保存的进度
+            loadProgress();
+        });
+
+        // 生成清单HTML
+        function generateChecklist() {
+            const container = document.getElementById('checklist-container');
+            container.innerHTML = '';
+            
+            checklistData.forEach(category => {
+                const categoryCard = document.createElement('div');
+                categoryCard.className = 'category-card';
+                categoryCard.dataset.category = category.category;
+                
+                const categoryTitle = document.createElement('h2');
+                categoryTitle.className = 'category-title';
+                categoryTitle.textContent = category.title;
+                
+                const checklist = document.createElement('ul');
+                checklist.className = 'checklist';
+                
+                category.items.forEach(item => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'checklist-item';
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `item-${category.category}-${item}`;
+                    checkbox.dataset.item = item;
+                    checkbox.dataset.category = category.category;
+                    
+                    checkbox.addEventListener('change', updateStats);
+                    
+                    const label = document.createElement('label');
+                    label.htmlFor = checkbox.id;
+                    label.textContent = item;
+                    
+                    listItem.appendChild(checkbox);
+                    listItem.appendChild(label);
+                    checklist.appendChild(listItem);
+                });
+                
+                categoryCard.appendChild(categoryTitle);
+                categoryCard.appendChild(checklist);
+                container.appendChild(categoryCard);
+            });
+            
+            // 更新总项目数
+            document.getElementById('total-count').textContent = getTotalItems();
+        }
+
+        // 获取总项目数
+        function getTotalItems() {
+            return checklistData.reduce((total, category) => total + category.items.length, 0);
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const completed = Array.from(checkboxes).filter(cb => cb.checked).length;
+            const total = getTotalItems();
+            const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+            
+            document.getElementById('completed-count').textContent = completed;
+            document.getElementById('percentage').textContent = `${percentage}%`;
+            document.getElementById('progress-bar').style.width = `${percentage}%`;
+        }
+
+        // 筛选项目
+        function filterItems() {
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            const items = document.querySelectorAll('.checklist-item');
+            
+            items.forEach(item => {
+                const label = item.querySelector('label');
+                const text = label.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // 同时显示/隐藏整个类别卡片
+            const categories = document.querySelectorAll('.category-card');
+            categories.forEach(category => {
+                const visibleItems = category.querySelectorAll('.checklist-item[style=""]').length + 
+                                   category.querySelectorAll('.checklist-item[style="display: flex;"]').length;
+                category.style.display = visibleItems > 0 ? 'block' : 'none';
+            });
+        }
+
+        // 按类别筛选
+        function filterByCategory(e) {
+            const category = e.target.dataset.category;
+            
+            // 更新活动按钮
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            e.target.classList.add('active');
+            
+            const categories = document.querySelectorAll('.category-card');
+            
+            if (category === 'all') {
+                categories.forEach(cat => {
+                    cat.style.display = 'block';
+                });
+            } else {
+                categories.forEach(cat => {
+                    if (cat.dataset.category === category) {
+                        cat.style.display = 'block';
+                    } else {
+                        cat.style.display = 'none';
+                    }
+                });
+            }
+        }
+
+        // 全选
+        function selectAll() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                cb.checked = true;
+            });
+            updateStats();
+        }
+
+        // 清空
+        function clearAll() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                cb.checked = false;
+            });
+            updateStats();
+        }
+
+        // 保存进度到本地存储
+        function saveProgress() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const progress = {};
+            
+            checkboxes.forEach(cb => {
+                progress[cb.dataset.category + '-' + cb.dataset.item] = cb.checked;
+            });
+            
+            localStorage.setItem('lifeChecklistProgress', JSON.stringify(progress));
+            alert('进度已保存！');
+        }
+
+        // 从本地存储加载进度
+        function loadProgress() {
+            const savedProgress = localStorage.getItem('lifeChecklistProgress');
+            if (savedProgress) {
+                const progress = JSON.parse(savedProgress);
+                const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                
+                checkboxes.forEach(cb => {
+                    const key = cb.dataset.category + '-' + cb.dataset.item;
+                    if (progress[key]) {
+                        cb.checked = true;
+                    }
+                });
+                
+                updateStats();
+            }
+        }
+    </script>
+</body>
+</html>
