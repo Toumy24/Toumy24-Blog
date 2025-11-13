@@ -27,7 +27,7 @@ JavaScript可以直接嵌入进HTML中，只需要将JavaScript代码放在`<scr
     <title>title</title>
 </head>
 <body>
-	<h1>Hello, Sekai!</h1>
+	<h1>Hello Sekai!</h1>
 	<script>
 		// 这里编写JavaScript代码
 	</script>
@@ -46,7 +46,7 @@ JavaScript可以直接嵌入进HTML中，只需要将JavaScript代码放在`<scr
     <title>title</title>
 </head>
 <body>
-    <h1>Hello, Sekai!</h1>
+    <h1>Hello Sekai!</h1>
     <script src="./index.js"></script>
 </body>
 </html>
@@ -61,7 +61,7 @@ JavaScript可以直接嵌入进HTML中，只需要将JavaScript代码放在`<scr
     <title>title</title>
 </head>
 <body>
-    <h1>Hello, Sekai!</h1>
+    <h1>Hello Sekai!</h1>
     <script>
         // 导入模块
         import { ... } from './index.js';

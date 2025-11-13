@@ -98,7 +98,11 @@ JS的对象可以存储键值对，可以用花括号`{}`表示。
 ```javascript
 const obj1 = {name: "John", age: 30};
 const obj2 = {name: "Mike", age: 25, city: "New York"};
+consol.log(obj1.name); // "John"
+console.log(obj2.city); // "New York"
 ```
+
+注意，虽然单独进行了介绍，**数组**其实是一种特殊的对象。
 
 ## 运算符
 
@@ -120,7 +124,7 @@ console.log(a); // 1
 console.log(b); // 2
 
 const {name, age} = {name: "John", age: 30};
-console.log(name); // John
+console.log(name); // "John"
 console.log(age); // 30
 ```
 
@@ -141,3 +145,113 @@ console.log(5 === "5");  // false - 严格相等
 console.log(5 != "5");   // false - 不等
 console.log(5 !== "5");  // true - 严格不等
 ```
+
+#### 逻辑运算符
+
+基础应用与C/C++相同。  
+
+JS的短路求值有一些独特的特性：
+
+```javascript
+// 短路求值，JS中会取操作数字面量
+// 如果第一个操作数是假值，返回第一个操作数本身
+console.log(true && "hello"); // "hello"
+console.log(false && "hello"); // false
+// 如果第一个操作数是假值，返回第二个操作数本身
+console.log(false || "hello"); // "hello"
+console.log(true || "hello"); // true
+
+console.log(true && 5); // 5
+```
+
+JS还加入了空值合并运算符`??`，可以方便地判断变量是否为`null`或`undefined`，并给变量提供默认值。
+
+```javascript
+const a = null;
+const b = '默认值';
+const c = a ?? b; // "默认值"
+```
+
+#### 三元运算符
+
+与C/C++中的三元运算符完全相同。
+
+#### 类型运算符
+
+JS引入了类型运算符`typeof`来判断变量的类型。
+
+```javascript
+const num = 10; // "number"
+const str = "hello"; // "string"
+const bool = true; // "boolean"
+const arr = [1, 2, 3]; // "object"
+const obj = {name: "John", age: 30}; // "object"
+const func = () => {}; // "function"
+if (typeof num === "number") {
+  console.log("num is a number");
+}
+```
+
+#### 字符串运算符
+
+字符串相加：
+
+```javascript
+const str1 = "hello";
+const str2 = "sekai";
+const str3 = str1 + ' ' + str2; // "hello sekai"
+```
+
+于Python的f-string类似，JS也支持模板字符串，可以方便地格式化字符串。
+
+```javascript
+const str1 = "hello";
+const str2 = "sekai";
+const str3 = `${str1} ${str2}`; // "hello sekai"
+const a = 10;
+const b = 20;
+const sum = `sum = ${a + b}`; // 30 （模板字符串支持任意表达式）
+```
+
+#### 可选链运算符
+
+可选链运算符`?.`可以方便地访问嵌套对象属性，避免报错。  
+如果链式调用的属性不存在，则返回`undefined`，可以免去冗长的判断语句。
+
+```javascript
+const obj = {
+  name: "John",
+  age: 30,
+  address: {
+    city: "New York",
+  }
+};
+const city = obj?.address?.city; // "New York"
+const name = obj?.address?.name; // undefined
+```
+
+#### 展开运算符
+
+JS引入了展开运算符`...`，表示展开可迭代对象（数组、字符串、对象等）。
+
+```javascript
+// 数组复制
+const arr1 = [1, 2, 3];
+const arr2 = [...arr1]; // [1, 2, 3]
+// 数组拼接
+const arr3 = [4, 5, 6];
+const arr4 = [...arr1, ...arr3]; // [1, 2, 3, 4, 5, 6]
+// 对象复制
+const obj1 = {name: "John", age: 30};
+const obj2 = {...obj1}; // {name: "John", age: 30}
+// 对象合并
+const obj3 = {city: "New York"};
+const obj4 = {...obj1, ...obj3}; // {name: "John", age: 30, city: "New York"}
+
+// 字符串操作
+const str1 = "hello";
+const chars = [...str1]; // ["h", "e", "l", "l", "o"]
+const complexStr = "Hello 👍 Sekai 🎉"; // 包含Unicode字符
+const chars2 = [...complexStr]; // ["H", "e", "l", "l", "o", " ", "👍", " ", "S", "e", "k", "a", "i", " ", "🎉"]
+```
+
