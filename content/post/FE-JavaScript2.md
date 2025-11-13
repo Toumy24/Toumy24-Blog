@@ -247,11 +247,29 @@ const obj2 = {...obj1}; // {name: "John", age: 30}
 // 对象合并
 const obj3 = {city: "New York"};
 const obj4 = {...obj1, ...obj3}; // {name: "John", age: 30, city: "New York"}
+// 移除对象属性
+const obj5 = {name: "John", age: 30, city: "New York"};
+const obj6 = {...obj5, city}; // {name: "John", age: 30}
 
 // 字符串操作
 const str1 = "hello";
 const chars = [...str1]; // ["h", "e", "l", "l", "o"]
 const complexStr = "Hello 👍 Sekai 🎉"; // 包含Unicode字符
 const chars2 = [...complexStr]; // ["H", "e", "l", "l", "o", " ", "👍", " ", "S", "e", "k", "a", "i", " ", "🎉"]
+
+// 解构赋值
+const [a, ...b] = [1, 2, 3];
+console.log(a); // 1
+console.log(b); // [2, 3]
+const {name, ...rest} = {name: "John", age: 30, city: "New York"};
+console.log(name); // "John"
+console.log(rest); // {age: 30, city: "New York"}
+
+// 函数参数解构
+const arr5 = [1, 2, 3];
+function sum(a, b, c) {
+  return a + b + c;
+}
+const result = sum(...arr5); // 6
 ```
 
