@@ -68,7 +68,6 @@ int main() {
     cout << (g > h ? g : h) << endl; // 当?前的表达式为真时，输出:前的表达式，否则输出:后的表达式 输出20
 
 
-    // 第一张图片代码：进制转换操作
     int num = 10;
     cout << showbase << uppercase; // 设置显示进制前缀和大写字母
     cout << "八进制: " << oct << num << endl;
@@ -80,7 +79,6 @@ int main() {
     cout << "使用setbase 16: " << setbase(16) << num << endl;
     cout << noshowbase << nouppercase; // 关闭进制前缀和大写字母
 
-    // 第二张图片代码：数值操作
     long long ll = 3141592653589793;
     double f = 3.14159265358979323846;
     cout << f << endl; // cout默认输出6位有效数字(浮点数)
