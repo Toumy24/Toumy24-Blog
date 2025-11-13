@@ -21,7 +21,7 @@ using ll = long long; //为long long设置别名ll
 //同typedef long long ll;
 
 int main() {
-    char str[100];//字符数组（可作为原生字符串使用）
+    char str[100];//字符数组（末尾加空字符'\0'可作为原生字符串使用）
     bool flag[100];//布尔数组（只储存0或1，即false或true）
     int arr[100];//整型数组
     ll larr[100];//长整型数组（同理，其他整型数组也可这样定义）
