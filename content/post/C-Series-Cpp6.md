@@ -2,7 +2,7 @@
 title: "通用语言教程-C++ 篇【6】函数"
 date: 2024-10-05T16:00:00+08:00
 timezone: UTC+8
-cover: https://blog.24toumy.top/coverimg/cpp.jpg
+cover: https://blog.24toumy.top/coverimg/cpp.png
 banner: "images/banner.webp"
 tags: ["C++","基础语法"]
 categories: 
