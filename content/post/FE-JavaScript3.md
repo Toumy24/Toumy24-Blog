@@ -2,6 +2,7 @@
 title: "前端教程-JavaScript 篇【3】分支结构与循环结构"
 date: 2025-11-05T16:00:00+08:00
 timezone: UTC+8
+cover: https://blog.24toumy.top/coverimg/js.webp
 tags: ["前端","JavaScript","基础语法"]
 categories: 
   - 计算机语言
