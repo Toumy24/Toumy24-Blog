@@ -152,7 +152,7 @@ for num in numbers:
     print(f"格式化: {(lambda x: f'{x:.2f}')(num)}")  # 格式化: 1.23, 2.35, 3.46
 # 海象运算符避免重复赋值    
 data = "Hello Sekai"
-print(f"长度: {len(data := 'Hello World')}, 大写: {data.upper()}")
+print(f"长度: {len(data := 'Hello Sekai')}, 大写: {data.upper()}")
 # 在条件判断中使用海象运算符
 scores = [85, 92, 78, 96, 88]
 for score in scores:
