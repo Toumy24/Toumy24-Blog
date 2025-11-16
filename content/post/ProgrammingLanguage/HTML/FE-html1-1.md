@@ -3,7 +3,6 @@ title: "前端教程-HTML篇【1.1】HTML常用属性"
 date: 2025-11-05T13:00:00+08:00
 timezone: UTC+8
 cover: https://blog.24toumy.top/coverimg/html-5.png
-banner: "images/banner.webp"
 tags: ["前端","HTML","基础语法"]
 categories: 
   - 计算机语言

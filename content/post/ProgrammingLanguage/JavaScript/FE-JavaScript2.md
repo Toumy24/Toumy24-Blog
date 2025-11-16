@@ -3,7 +3,6 @@ title: "前端教程-JavaScript 篇【2】基础语法"
 date: 2025-11-05T15:00:00+08:00
 timezone: UTC+8
 cover: https://blog.24toumy.top/coverimg/js.png
-banner: "images/banner.webp"
 tags: ["前端","JavaScript","基础语法"]
 categories: 
   - 计算机语言
@@ -100,7 +99,7 @@ JS的对象可以存储键值对，可以用花括号`{}`表示。
 ```javascript
 const obj1 = {name: "John", age: 30};
 const obj2 = {name: "Mike", age: 25, city: "New York"};
-consol.log(obj1.name); // "John"
+console.log(obj1.name); // "John"
 console.log(obj2.city); // "New York"
 ```
 
