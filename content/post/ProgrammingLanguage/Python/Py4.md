@@ -102,6 +102,7 @@ for _ in range(n):
     print(f"本行有 {len(values)} 个值: {values}")
     # 如果要转换为整数
     # numbers = list(map(int, values))
+    # map()函数的语法为 map(function, iterable)，将函数 function 作用到 iterable 的每个元素上，并返回一个新的迭代器，使用list()函数可以将其转换为列表。
     
 # 使用列表推导式的简化版：
 # 读取第一行获取行数 n，然后读取 n 行数据
