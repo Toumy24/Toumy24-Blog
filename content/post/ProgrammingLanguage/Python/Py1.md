@@ -14,7 +14,7 @@ draft: false
 
 Python是一门非常灵活与优雅的动态语言，它省去了静态语言的繁琐语法与程序结构，封装了大量实用功能，让用户可以专注于编写核心功能而非关心底层实现以及造轮子；这么做并非没有代价，代价就是Python的性能远远弱于市面上其他静态语言如Java、C++等，所以当涉及高性能开发时，不应该选用Python。
 
-## 从Hello World认识Python
+## 从Hello Sekai认识Python
 
 ### `print()`
 
@@ -22,10 +22,10 @@ Python是一门非常灵活与优雅的动态语言，它省去了静态语言�
 `print()`默认换行，若不换行可加上`end=" "`
 
 ```python
-print('hello, world')
+print('hello, sekai')
 print('--------')
 print('hello')
-print('world') #换行输出
+print('sekai') #换行输出
 print('--------')
 print('a', end = ' ')
 print('b', end = ' ') #不换行输出
@@ -35,10 +35,13 @@ print('b', end = ' ') #不换行输出
 
 保留字即关键字，我们不能把它们用作任何标识符名称。Python 的标准库提供了一个 keyword 模块，可以输出当前版本的所有关键字：
 
-```sh
+```console
 >>> import keyword
 >>> keyword.kwlist
-['False', 'None', 'True', 'and', 'as', 'assert', 'break', 'class', 'continue', 'def', 'del', 'elif', 'else', 'except', 'finally', 'for', 'from', 'global', 'if', 'import', 'in', 'is', 'lambda', 'nonlocal', 'not', 'or', 'pass', 'raise', 'return', 'try', 'while', 'with', 'yield']
+['False', 'None', 'True', 'and', 'as', 'assert', 'break', 'class', 'continue',  
+'def', 'del', 'elif', 'else', 'except', 'finally', 'for', 'from', 'global',  
+'if', 'import', 'in', 'is', 'lambda', 'nonlocal', 'not', 'or', 'pass',  
+'raise', 'return', 'try', 'while', 'with', 'yield']
 ```
 
 当命名变量时，应注意避开保留字的关键字进行命名。
