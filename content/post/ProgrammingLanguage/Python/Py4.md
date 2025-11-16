@@ -71,6 +71,20 @@ print(arr == arr1)  # True
 arr1 = arr[:]
 print(arr is arr1)  # False
 print(arr == arr1)  # True
+
+# 三元运算符（本质上是 if-else 语句的简写）
+print(2 if 2 > 3 else 3)  # 3
+
+# 海象运算符:=（Python 3.8+）
+# 可以在表达式中赋值
+# 普通写法
+a = "hello world"
+n = len(a)
+if n > 5:
+   print(f"字符串长度为 {n}")
+# 使用海象运算符
+if (n := len(a)) > 5:
+   print(f"字符串长度为 {n}")
 ```
 
 ## 高级输入输出
@@ -111,4 +125,41 @@ data = [input().split() for _ in range(n)]
 print(f"所有数据: {data}")
 # 转为整数：
 numbers = [list(map(int, input().split())) for _ in range(n)]
+
+# 输出
+print("Hello, sekai")
+print("Hello, sekai", end="")  # 输出后不换行
+# 格式化输出
+print("{:.2f}".format(3.1415926))  # 输出 3.14
+print("{:.2f}".format(123456789.123456789))  # 输出 123456789.12
+print("{:>10}".format("hello"))  # 输出 "     hello" 右对齐
+print("{:<10}".format("hello"))  # 输出 "hello     " 左对齐
+print("{:^10}".format("hello"))  # 输出 "   hello   " 中间对齐
+print("{:*^10}".format("hello"))  # 输出 "***hello***" 居中
+print("{:.2%}".format(0.25))  # 输出 "25.00%"
+
+# f-string（Python 3.6+）在双引号前增加 f 即可使用，可以直接在字符串中嵌入变量或表达式。
+name = "Toumy"
+age = 24
+print(f"My name is {name} and I am {age} years old.")
+# {}中可以使用变量，也可以使用表达式，但不能使用赋值语句（可以使用海象运算符）。
+print(f"1 + 2 = {1 + 2}")  # 1 + 2 = 3
+a, b = 3, 4
+print(f"和: {(lambda x, y: x+y)(a, b)}")  # 和: 7
+# 使用 lambda 进行复杂格式化
+numbers = [1.23456, 2.34567, 3.45678]
+for num in numbers:
+    print(f"格式化: {(lambda x: f'{x:.2f}')(num)}")  # 格式化: 1.23, 2.35, 3.46
+# 海象运算符避免重复赋值    
+data = "Hello World"
+print(f"长度: {len(data := 'Hello World')}, 大写: {data.upper()}")
+# 在条件判断中使用海象运算符
+scores = [85, 92, 78, 96, 88]
+for score in scores:
+    print(f"分数: {score}, 等级: {'优秀' if (grade := score) >= 90 else '良好' if grade >= 80 else '及格'}")
+# 列表推导式
+numbers = [1, 2, 3, 4, 5]
+print(f"平方列表: {[x**2 for x in numbers]}")  # 平方列表: [1, 4, 9, 16, 25]
+# 带条件的推导式
+print(f"偶数平方: {[x**2 for x in numbers if x % 2 == 0]}")  # 偶数平方: [4, 16]
 ```
