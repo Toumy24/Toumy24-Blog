@@ -137,6 +137,10 @@ print("{:<10}".format("hello"))  # 输出 "hello     " 左对齐
 print("{:^10}".format("hello"))  # 输出 "   hello   " 中间对齐
 print("{:*^10}".format("hello"))  # 输出 "***hello***" 居中
 print("{:.2%}".format(0.25))  # 输出 "25.00%"
+# 循环输出格式化的字符串
+for i in range(1, 11):
+    print("{:>10}".format(i)) # 输出 1 到 10 右对齐
+
 
 # f-string（Python 3.6+）在双引号前增加 f 即可使用，可以直接在字符串中嵌入变量或表达式。
 name = "Toumy"

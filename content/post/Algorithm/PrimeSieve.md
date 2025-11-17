@@ -59,9 +59,9 @@ const int MAXN = 1000000;
 std::vector<bool> is_prime(MAXN, true); // 初始化标记数组，将标记数组的所有元素标记为true，即暂时默认所有数都是素数
 void eratosthenes() {
     is_prime[0] = is_prime[1] = false; // 0和1不是素数
-    for (int i = 2; i * i <= N; i++) { // 同样只遍历到平方根
+    for (int i = 2; i * i <= MAXN; i++) { // 同样只遍历到平方根
         if (is_prime[i]) {
-            for (int j = i * i; j < N; j += i) {
+            for (int j = i * i; j < MAXN; j += i) {
                 is_prime[j] = false; // 把每个i的倍数都标记为合数
             }
         }
