@@ -109,6 +109,8 @@ print(nums)
 # 基本形式：
 # 读取第一行获取行数 n
 n = int(input())
+# 读取不定数量的值
+nums = list(map(int, input().split()))
 # 循环读取 n 行
 for _ in range(n):
     # 读取一行并用空格分割
@@ -146,6 +148,7 @@ for i in range(1, 11):
 name = "Toumy"
 age = 24
 print(f"My name is {name} and I am {age} years old.")
+
 # {}中可以使用变量，也可以使用表达式，但不能使用赋值语句（可以使用海象运算符）。
 print(f"1 + 2 = {1 + 2}")  # 1 + 2 = 3
 a, b = 3, 4
@@ -154,13 +157,16 @@ print(f"和: {(lambda x, y: x+y)(a, b)}")  # 和: 7
 numbers = [1.23456, 2.34567, 3.45678]
 for num in numbers:
     print(f"格式化: {(lambda x: f'{x:.2f}')(num)}")  # 格式化: 1.23, 2.35, 3.46
+
 # 海象运算符避免重复赋值    
 data = "Hello Sekai"
 print(f"长度: {len(data := 'Hello Sekai')}, 大写: {data.upper()}")
+
 # 在条件判断中使用海象运算符
 scores = [85, 92, 78, 96, 88]
 for score in scores:
     print(f"分数: {score}, 等级: {'优秀' if (grade := score) >= 90 else '良好' if grade >= 80 else '及格'}")
+    
 # 列表推导式
 numbers = [1, 2, 3, 4, 5]
 print(f"平方列表: {[x**2 for x in numbers]}")  # 平方列表: [1, 4, 9, 16, 25]
