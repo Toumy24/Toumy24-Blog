@@ -10,7 +10,7 @@ draft: false
 math: true
 ---
 
-Horspool算法是一种高效的字符串子串搜索算法，它是Boyer-Moore算法的简化改进版本。
+**Horspool算法是一种高效的字符串子串搜索算法，它是Boyer-Moore算法的简化改进版本。**
 
 ## 算法描述
 
