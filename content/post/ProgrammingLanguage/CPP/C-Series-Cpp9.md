@@ -258,19 +258,6 @@ int Person::count = 0;   // 静态成员变量的定义
 - 全局变量
 - 常量
 
-#### 友元
-
-友元（friend）是一种特权机制，允许一个类访问另一个类的私有成员。友元函数和友元类都可以访问私有成员。
-
-友元函数：可以访问类的私有和保护成员
-
-```c++
-class BankAccount {
-    private:
-        double balance = 1000.0;
-        friend void showBalance(const BankAccount& acc);  // 声明友元函数
-};
-
 ### 前向声明
 
 当两个类互相引用，或者只是需要指针/引用时，可以先“前向声明”，不必包含完整定义。
