@@ -13,7 +13,7 @@ math: true
 
 ## 基础运算符与高级输出
 
-```cpp
+```c++
 #include <iostream>
 #include <iomanip> //导入输出格式控制头文件
 using namespace std;

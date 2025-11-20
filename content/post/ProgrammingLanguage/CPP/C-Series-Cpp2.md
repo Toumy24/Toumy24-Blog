@@ -13,7 +13,7 @@ math: true
 
 ## 基础数据类型
 
-```cpp
+```c++
 #include <cstdint> //导入头文件以使用int16_t, int32_t, int64_t等别名
 #include <iostream>
 #include <string> //使用string类型

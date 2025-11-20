@@ -16,7 +16,7 @@ math: true
 由于曾经进行过教学，之后的C++系列直接附上课件。  
 懒得用多行注释了，索性就都用单行注释了。
 
-```cpp
+```c++
 #include <iostream>//导入头文件，iostream全名为input&output stream(输入输出流)
 #include <cstdio>//导入头文件，cstdio全名为c standard input/output(C标准输入输出)
 using namespace std;//命名空间，本质是一个全局性的作用域操作。

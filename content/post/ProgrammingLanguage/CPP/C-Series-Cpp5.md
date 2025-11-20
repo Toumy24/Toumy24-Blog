@@ -13,7 +13,7 @@ math: true
 
 ## 数组
 
-```cpp
+```c++
 #include <iostream>
 #include <cstdio>
 using namespace std;

@@ -13,7 +13,7 @@ math: true
 
 ## 分支结构
 
-```cpp
+```c++
 #include <iostream>
 using namespace std;
 
@@ -67,7 +67,7 @@ int main() {
 
 ## 循环结构
 
-```cpp
+```c++
 #include <iostream>
 using namespace std;
 

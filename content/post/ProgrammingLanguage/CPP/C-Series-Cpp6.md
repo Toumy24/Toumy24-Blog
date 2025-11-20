@@ -13,7 +13,7 @@ math: true
 
 ## 函数
 
-```cpp
+```c++
 #include <iostream>
 #include <string>
 #include <cstdio>

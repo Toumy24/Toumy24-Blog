@@ -12,7 +12,7 @@ draft: false
 
 ## 指针
 
-```cpp
+```c++
 #include <iostream>
 using namespace std;
 
@@ -176,7 +176,7 @@ void swap(int* x, int* y) {
 
 ### 指针算术
 
-```cpp
+```c++
 #include <iostream>
 using namespace std;
 
