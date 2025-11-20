@@ -10,6 +10,8 @@ categories:
 draft: false
 ---
 
+> 本章节会顺着类与对象的知识点，循序渐进的实现一个简单的公司员工银行账户系统。
+
 ## 类
 
 类（class）是面向对象编程的基本单元，它定义了对象的属性和行为。类可以包含数据成员（data member）、成员函数（member function）、构造函数（constructor）、析构函数（destructor）、友元函数（friend function）等。
@@ -89,7 +91,7 @@ class Person {
             salary = 5000;
         }
         
-        // 带默认参数的构造函数（至少需要两个参数，所有不存在二义性）
+        // 带默认参数的构造函数（至少需要两个参数，所以不存在二义性）
         Person(string n, int a, int s = 5000) {
             name = n;
             age = a;
@@ -101,8 +103,8 @@ class Person {
 使用方式：
 
 ```c++
-Person p1;                  // 调用默认构造函数（带参构造函数需要至少两个参数）
-Person p2("Alice", 30);     // 调用带参构造函数
+Person p1;                  // 这里调用默认构造函数（带参构造函数需要至少两个参数，所以这里不会与带参构造函数冲突）
+Person p2("Alice", 30);     // 这里调用带参构造函数
 Person p3("Tom", 25, 8000);
 ```
 
@@ -174,7 +176,7 @@ void Person::sayHello() {
 }
 
 int Person::Salary_with_bonus(int bonus) {
-    return salary + bonus;   // 可以在类外访问私有成员
+    return salary + bonus;   // 类外定义仍在类作用域内，可以访问私有成员
 }
 ```
 
