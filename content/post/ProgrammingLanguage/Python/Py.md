@@ -361,6 +361,21 @@ def expensive_calculation(x, y):
 
 # 通过lru_cache实现记忆化搜索
 # 记忆化搜索算法是一种动态规划算法，利用递归函数的返回值来避免重复计算
+
+# 最典型直观的例子：斐波那契数列
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+print(fibonacci(50))  # 递归运算需要花费大概13分钟
+# 记忆化递归
+@lru_cache(maxsize=None)
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+print(fibonacci(50))  # 递归运算去除重复运算，几乎瞬间完成
+
 # 下面解决硬币找零问题，给定不同面额的硬币，计算最少需要多少枚硬币来凑够给定的金额
 @lru_cache(maxsize=None)
 def coin_change(coins, amount):

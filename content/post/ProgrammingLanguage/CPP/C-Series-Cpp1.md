@@ -47,7 +47,7 @@ int main() {
     //入口函数，告诉计算机程序开始的地方，不可省略
     cin >> global_var;//c++风格的输入，读取全局变量global_var的值
     cout << "Hello Sekai!" << endl;//输出到控制台，endl表示换行，每个语句后面都要加上分号，表示终止符，目的是告诉计算机一条语句结束了。
-    scanf("%d)", &global_var);//c风格的输入，读取全局变量global_var的值
+    scanf("%d", &global_var);//c风格的输入，读取全局变量global_var的值
     printf("%d\n", global_var);//c风格的输出，输出全局变量global_var的值
     /*（偷偷用个多行注释）
         对于c风格(c语言)的输入输出，需要使用cstdio头文件(c语言中为stdio.h)，同时scanf和printf函数的第一个参数是格式字符串，
