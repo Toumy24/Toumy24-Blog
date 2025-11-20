@@ -56,10 +56,23 @@ class Person {
         string name = "Unknown";   // 类内初始化
         int age = 0;
     private:
-        int salary = 6000;         // 私有的也可以类内初始化
+        int salary = 5000;         // 私有的也可以类内初始化
     protected:
         string id = "000001";
 };
+```
+
+实际上，上文中的类内初始化本质上是赋值，而下面语法是真正的初始化：
+
+```c++
+class Person {
+    public:
+        string name{"Unknown"};
+        int age{0};
+    private:
+        int salary{5000};
+    protected:
+        string id{"000001"};
 ```
 
 #### 构造函数
@@ -77,7 +90,7 @@ class Person {
         }
         
         // 带默认参数的构造函数（至少需要两个参数，所有不存在二义性）
-        Person(string n, int a, int s = 6000) {
+        Person(string n, int a, int s = 5000) {
             name = n;
             age = a;
             salary = s;
@@ -109,18 +122,8 @@ class Person {
         Person() : Person("Unknown", 0, 5000) {} // 同上写法，但是将默认构造函数委托给带参构造函数（高级用法）
 
         // 成员初始化列表的基础用法
-        Person(string n, int a, int s = 6000) : name(n), age(a), salary(s) {} //不要省略{}
+        Person(string n, int a, int s = 5000) : name(n), age(a), salary(s) {} //不要省略{}
 };
-```
-
-实际上，上文（类的定义）中提到的类内初始化本质上是赋值，而成员初始化列表是真正的初始化：
-
-```c++
-class Person {
-    private:
-        string name("Unknown");
-        int age(0);
-        int salary(5000);
 ```
 
 #### 析构函数
@@ -219,7 +222,6 @@ class Person {
 };
 
 // 使用链式调用
-// int main() {
 Person p("Tom", 25);
 p.setName("Alice").setAge(30);  // 链式调用，setName返回*this，继续调用setAge
 p.introduce(); // 输出 "我叫做Alice，我 30岁了"
@@ -233,6 +235,38 @@ const成员函数（const member function）是指不能修改对象的成员变
 返回类型 函数名(参数列表) const {
     // 函数体 - 不能修改成员变量（mutable除外）
 }
+```
+
+const的用法：
+
+```c++
+class BankAccount {
+public:
+    // const对象只能调用const成员函数
+    double getBalance() const { return balance; }
+    
+    // 非const函数
+    void withdraw(double amount) { balance -= amount; }
+};
+
+// 使用
+const BankAccount account;  // const对象
+cout << account.getBalance();  // 可以调用
+// account.withdraw(100);     // 编译错误
+```
+
+mutable成员变量：可以被const函数修改的成员变量。
+
+```c++
+class BankAccount {
+private:
+    mutable int accessCount;  // 即使在const函数中也能修改
+public:
+    double getBalance() const {
+        accessCount++;  // 允许修改
+        return balance;
+    }
+};
 ```
 
 #### 静态成员
@@ -358,7 +392,6 @@ class BankAccount {
 
 ```c++
 // 文章的例子
-// int main() {
 Person p1; // 类名 + 对象名 （隐式调用默认构造函数）
 Person p2("Alice", 30); // 类名 + 对象名 + 构造函数（传参）
 ```
@@ -376,7 +409,6 @@ class A {
         int z = 10;
 };
 
-// int main() {
 A a; // 实例化对象
 a.x = 10; // 访问数据成员
 a.z = 20; // 错误：不能访问私有成员
@@ -409,7 +441,7 @@ class Person {
         }
         
         // 使用this指针区分参数和成员变量
-        Person(string name, int age, int salary = 6000) { // 带参构造函数
+        Person(string name, int age, int salary = 5000) { // 带参构造函数
             this->name = name;
             this->age = age;
             this->salary = salary;
