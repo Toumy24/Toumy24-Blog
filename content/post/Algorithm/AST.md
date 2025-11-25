@@ -57,13 +57,13 @@ int main() {
 
 抽象语法树的每个节点都代表着源代码中的一个语法结构，例如，表达式、语句、函数调用、变量声明、赋值语句等等。
 
-首先构建一个简单的加法运算`1 + 2 + 3的AST：
+首先构建一个简单的加法运算`1 + 2 + 3`的AST：
 
 ```text
-     +
-    / \
-   +   3
-  / \
+    +
+   / \
+  +   3
+ / \
 1   2
 ```
 
@@ -262,7 +262,7 @@ def tokenizer(expression: str) -> list:
             raise ValueError(f"不支持的运算符{char}")
     return tokens
 
-def parser(tokens: list,) -> Node:
+def parser(tokens: list) -> Node:
     if not tokens:
         raise ValueError("表达式不能为空")
 
