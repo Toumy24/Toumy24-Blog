@@ -265,7 +265,6 @@ def tokenizer(expression: str) -> list:
 def parser(tokens: list) -> Node:
     if not tokens:
         raise ValueError("表达式不能为空")
-
     if tokens[0]["Type"] != "Number":
         raise ValueError("无效的格式")
     left = Number(tokens[0]["Value"])
