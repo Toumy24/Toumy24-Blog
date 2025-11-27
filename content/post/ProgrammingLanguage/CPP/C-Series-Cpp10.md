@@ -9,6 +9,10 @@ categories:
   - 通用语言
 draft: false
 ---
+
+>为了在下面的程序中使用智能指针，我先在这里#include一个<memory>库。
+>关于智能指针，请看
+
 ## 类的继承与多态
 
 ### 继承
@@ -130,9 +134,16 @@ int main() {
 }
 ```
 
+每个包含虚函数的类都有一个虚函数表（vtable），虚函数表中存储了虚函数的地址。当调用虚函数时，实际上调用的是虚函数表中的地址。
+每个实例化的对象都有一个指向vtable的指针（vptr），当调用虚函数时，实际上调用的是vptr指向的vtable中的地址。
+
 #### 纯虚函数与抽象类
 
 纯虚函数是指在基类中声明，不提供函数体的虚函数。纯虚函数的声明以`= 0`结尾。
+
+声明了纯虚函数的类叫做**抽象类**，抽象类只能作为基类被继承，不能实例化。
+
+继承了抽象基类的派生类必须实现抽象基类中实现的所有纯虚函数。
 
 ```c++
 class Shape {
@@ -145,12 +156,15 @@ class Circle : public Shape {
     private:
         double radius;
     public:
-        Circle(double r) : radius(r) {}
-        double area() overrride {
+        Circle(double r) : radius(r) {} // 构造函数
+        double area() overrride { // 重写纯虚函数
             return 3.14 * radius * radius;
         }
-        double draw() override {    
-            // 画圆的代码
+        double draw() override { // 重写纯虚函数
+            cout << "正在画圆" << endl;
             return 0;
         }
 };
+
+int main() {
+    Shape* shape = new Circle(5);

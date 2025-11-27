@@ -1,5 +1,5 @@
 ﻿---
-title: "通用语言教程-C++ 篇【7】指针"
+title: "通用语言教程-C++ 篇【7】指针与引用"
 date: 2024-10-05T16:30:00+08:00
 timezone: UTC+8
 cover: https://blog.24toumy.top/coverimg/cpp.png
@@ -202,3 +202,42 @@ int main() {
 - 第三元素地址：ptr + 2 = 0x1000 + 2 × 4 = 0x1008
 - 第四元素地址：ptr + 3 = 0x1000 + 3 × 4 = 0x100C
 - 第n+1个（索引从0开始）元素地址：ptr + n = 0x1000 + n × 4 
+
+## 引用
+
+引用变量可以看作已存在变量的一个别名，可以通过引用变量直接操作原变量的值，可以避免拷贝带来的开销。
+
+```c++
+#include <iostream>
+using namespace std;
+
+void swap(int& x, int& y) { // 形参为引用变量（即，形参是实参的别名），因此直接修改实参本身的值
+    int temp = x;
+    x = y;
+    y = temp;
+}
+
+int main() {
+    int a = 10, b = 20;
+    int& ref = a; // 声明引用变量ref，并初始化为a的引用
+    
+    cout << "a = " << a << endl; // 10
+    cout << "b = " << b << endl; // 20
+    cout << "ref = " << ref << endl; // 10
+    
+    ref = 30; // 直接修改a的值
+    
+    cout << "a = " << a << endl; // 30
+    cout << "b = " << b << endl; // 20
+    cout << "ref = " << ref << endl; // 30
+    
+    swap(a, b); // 调用函数交换a和b的值
+
+    cout << "a = " << a << endl; // 20
+    cout << "b = " << b << endl; // 30
+    cout << "ref = " << ref << endl; // 20
+
+    return 0;
+}
+```
+
