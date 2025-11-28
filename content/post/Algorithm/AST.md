@@ -1,5 +1,5 @@
 ﻿---
-title: "如何自己写一个编译器——抽象语法树（AST）"
+title: "如何自己写一个编译器——抽象语法树（AST）【第一章】"
 date: 2025-11-24T09:00:00+08:00
 timezone: UTC+8
 tags: ["算法","编译原理","抽象语法树","AST"]
@@ -75,6 +75,9 @@ int main() {
 
 递归下降语法分析是一种自顶向下的解析方法，它通过分析输入的词法单元（token）来构造语法树，每次分析一个词法单元，就将其与已经构造好的语法树进行匹配，直到输入的词法单元序列结束（或出现输入错误）。
 
+**注意，递归下降只是一种逻辑上的方法论，并不是真正的递归编程技巧。**
+
+#### 加法运算的递归下降解释器
 
 接下来我们使用Python（简化造轮子流程）实现一个简单的**加法递归下降算术表达式解释器**，首先来构建一个词法分析器（Tokenizer）来将输入的字符串分割成词法单元序列。
 
@@ -112,7 +115,7 @@ def tokenizer(expression: str) -> list[dict]: # 词法分析器，参数为表�
     return tokens
 ```
 
-这个函数会将词法单元序列储存为哈希表键值对（字典），其中键为`Type`（类型）和`Value`（值），例如`{"Type": "Number", "Value": 123}`表示一个数字。
+这个函数会将词法单元序列储存为哈希表键值对（字典实现），其中键为`Type`（类型）和`Value`（值），例如`{"Type": "Number", "Value": 123}`表示一个数字。
 
 现在，可以构建AST节点了：
 
@@ -305,9 +308,11 @@ if __name__ == "__main__":
 
 实际上，`eval()`函数的底层实现就是靠的AST，我们的代码是实现了一个简化版的`eval()`函数，只支持加法运算。
 
+#### 扩展到四则运算
+
 这个例子的递归下降解析不是很直观，接下来，我们来扩展这个加法运算解释器，把它变成四则运算解释器，并使用更直观的递归下降法来编写解析器。
 
-首先对于一个完善的四则运算计算器来说，不应该只有四则运算，还应该可以处理负数、括号的情况，所以，修改节点与tokenizer，同时为了兼容小数点，修改tokenizer：
+首先对于一个完善的四则运算计算器来说，不应该只有四则运算，还应该可以处理负数、括号的情况，同时兼容小数点，所以，修改节点与tokenizer：
 
 ```python
 from abc import ABC, abstractmethod
@@ -373,13 +378,12 @@ def tokenizer(expression: str) -> list[dict]:
     return tokens
 ```
 
-接下来，修改parser（更直观的递归下降法）。在这里我们引入一个新的概念——**token消费**，即，我们原地操作tokens，每递归下降到对应的处理节点时，将对应的token从列表中移除，下一次递归时只处理剩下的token。
+接下来，修改parser（更直观的递归下降法）。在这里我们引入一个新的概念——**token消费**，即，我们原地操作tokens，每递归下降到对应的处理节点时，将对应的token从列表中移除，顺序处理。
 
 ```python
 def parser(tokens: list[dict]) -> Node:
     tokens = tokens.copy()
     return parse_addition_subtraction(tokens)
-
 
 def parse_addition_subtraction(tokens: list[dict]) -> Node:
     node = parse_multiplication_division(tokens)
@@ -389,7 +393,6 @@ def parse_addition_subtraction(tokens: list[dict]) -> Node:
         node = BinaryOperation(node, operator, right)
     return node
 
-
 def parse_multiplication_division(tokens: list[dict]) -> Node:
     node = parse_factor(tokens)
     while tokens and tokens[0]["Type"] == "Operator" and tokens[0]["Value"] in "*/":
@@ -397,7 +400,6 @@ def parse_multiplication_division(tokens: list[dict]) -> Node:
         right = parse_factor(tokens)
         node = BinaryOperation(node, operator, right)
     return node
-
 
 def parse_factor(tokens: list[dict]) -> Node:
     if not tokens:
@@ -423,9 +425,11 @@ def parse_factor(tokens: list[dict]) -> Node:
  
 tokens将在递归下降中发生这样的步骤：
 1. 调用`parser`，传入`tokens`列表，返回调用`parse_addition_subtraction`的结果。
-2. 当调用`parse_addition_subtraction`（加减法，最低优先级），如果当前项是加减号，则弹出并储存当前项，当前位置变为原项的后面一项，使用`right`变量储存，然后把当前项指定为`BinaryOperation`节点，并传入`left`为`node`（当前项），`operator`为当前项的运算符，`right`为`right`变量（下一项）。如果当前项不是加减号，向下调用`parse_multiplication_division`。
+2. 当调用`parse_addition_subtraction`（加减法，最低优先级），如果当前项是加减号，则弹出并储存当前项，当前位置变为原项的后面一项，使用`right`变量储存，然后把当前项指定为`BinaryOperation`节点，并传入`left`为`node`（当前项），`operator`为当前项的运算符，`right`为`right`变量（当前项为原项的下一项）。如果当前项不是加减号，向下调用`parse_multiplication_division`。
 3. 进入`parse_multiplication_division`（乘除法，次优先级）后，发生与第二步相同的步骤，直到当前项不是乘除法时，向下调用`parse_factor`。
-4. 调用`parse_factor`（因子：数值、括号、一元运算符），如果当前项是数字，则返回`Number`节点。如果当前项是左括号，则调用`parse_addition_subtraction`（递归回`parse_addition_subtraction`），开始一轮循环，处理括号内的表达式，并返回结果。如果当前项是一元运算符，则调用`parse_factor`自身，处理运算符右边的操作数或表达式，处理的过程中遇到加减乘除号则重新向上递归开始循环，最终返回`UnaryOperation`节点。
+4. 调用`parse_factor`（因子：数值、括号、一元运算符），如果当前项是数字，则返回`Number`节点。如果当前项是左括号，则调用`parse_addition_subtraction`（递归回`parse_addition_subtraction`），开始新的一轮操作循环，处理括号内的表达式，并返回结果。如果当前项是一元运算符，则调用`parse_factor`自身，处理运算符右边的操作数或表达式，处理的过程中遇到加减乘除号则重新向上返回开始上述步骤的循环，最终返回`UnaryOperation`节点。
+
+**就像一个工厂流水线，不同的机械臂组装不同的组件，从零开始组装，组装完一次后带着初成品返回到掌管下一个组件组装的机械臂处，继续向前组装，返回，组装循环。**
 
 光看这个步骤可能难以理解，有人这时候就要问了，唉唉，执行完`parse_factor`后，也没看见继续进行调用啊，递归在哪？  
 实际上，到这一步，一个递归的过程还没有完成，我们引入**函数调用栈**来解释这个过程。  
@@ -437,7 +441,7 @@ parser
     └── parse_multiplication_division
         └── parse_factor  ← 当前正在执行
 ```
-所以，当`parse_factor`执行完毕并返回，实际上是回到了上一层函数`parse_multiplication_division`，如果不满足条件，函数返回后继续执行上一个外层函数，直到回到`parser`函数，然后开始下一轮递归循环。
+所以，当`parse_factor`执行完毕并返回，实际上是回到了上一层函数`parse_multiplication_division`，如果不满足条件，函数返回后继续执行上一个外层函数，直到回到`parser`函数，然后开始下一轮的下降分析。
 
 以`1+2*3`为例，经过tokenizer处理后，我们得到（我将简化类型与值）：`['1', '+', '2', '*', '3']`。   
 parser是这样处理这个tokens的：
@@ -446,8 +450,10 @@ parser是这样处理这个tokens的：
 3. 第二步调用的`parse_multiplication_division`发现第一项为数字2，向下调用`parse_factor`。
 4. 第三步调用的`parse_factor`发现第一项为数字1，返回`Number`节点，并弹出第一项数字1，此时第一项变为加号`+`。
 5. `parse_factor`返回后，回到函数调用栈的上层函数`parse_multiplication_division`，发现加号并不满足乘除号，返回`node`，然后回到函数调用栈的再上层函数`parse_addition_subtraction`。
-6. `parse_addition_subtraction`发现当前项为加号`+`，储存并弹出加号，此时第一项变为数字2，返回`BinaryOperation`节点，并传入`left`为`node`（当前项），`operator`（加号）为当前项的运算符，`right`为`right`变量（下一项）。
-7. `parse_addition_subtraction`返回后，回到函数调用栈的上层函数`parser`，由于`parser`为栈底，该轮递归结束，此时tokens列表为`['2', '*', '3']`，在`parser`中被传入`parse_multiplication_division`，开启下一轮递归循环处理剩下的tokens，以此类推。
+6. `parse_addition_subtraction`发现当前项为加号`+`，储存并弹出加号，此时第一项变为数字2，返回`BinaryOperation`节点，并传入`left`为`node`（左操作数），`operator`（加号）为当前项的运算符，`right`为`right`变量（右操作数，弹出加号后，当前项变成加号的下一项即数字2）。
+7. `parse_addition_subtraction`返回后，回到函数调用栈的上层函数`parser`，由于`parser`为栈底，调用栈的所有内层函数结束，此时tokens列表为`['2', '*', '3']`，在`parser`中被传入`parse_multiplication_division`，继续进行下降分析处理剩下的tokens，以此类推。
+
+**注意，整个下降分析过程是单次、连续的分析，并不分段、分多轮处理，这正是递归下降法的强大之处，这意味着它可以在一个函数调用栈中，最好O(1)时间复杂度、平均和最坏O(n)时间复杂度下，完成所有tokens的处理。**
 
 解析器执行完毕后，AST构建完毕，对于`1+2*3`，AST如下：
 ```text
