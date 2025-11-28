@@ -409,14 +409,14 @@ def parse_factor(tokens: list[dict]) -> Node:
 
     if token["Type"] == "Number":
         return Number(token["Value"])
-    elif token["Type"] == "LeftParen":
-        node = parse_addition_subtraction(tokens)
+    elif token["Type"] == "LeftParen": # 处理括号，括号会影响优先级且可以嵌套，这里是真正的递归操作（间接递归）
+        node = parse_addition_subtraction(tokens) # 解析括号内的表达式
         if not tokens or tokens[0]["Type"] != "RightParen":
             raise ValueError("右括号呢？")
         tokens.pop(0)
         return node
     elif token["Type"] == "Operator" and token["Value"] in "+-":
-        operand = parse_factor(tokens)
+        operand = parse_factor(tokens) # 处理操作数，这里也是真正的递归操作（直接递归）
         return UnaryOperation(token["Value"], operand)
     else:
         raise ValueError(f"{token}何意味？")
