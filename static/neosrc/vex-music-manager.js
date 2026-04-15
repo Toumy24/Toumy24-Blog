@@ -47,7 +47,7 @@ export class VexMusicManager {
       await this.loader.waitForVexFlow(vexflowTimeout);
 
       // 初始化Parser（真实或Fallback）
-      const parserPath = options.parserPath || './vex-music-parser.js';
+      const parserPath = options.parserPath || '/neosrc/vex-music-parser.js';
       await this.loader.initializeParser(parserPath);
 
       // 创建渲染器

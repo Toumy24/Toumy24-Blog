@@ -27,7 +27,7 @@ export async function renderAllMusicScores() {
     try {
       // 初始化（第一次会执行，之后被缓存）
       await manager.initialize({
-        parserPath: './vex-music-parser.js'
+        parserPath: '/neosrc/vex-music-parser.js'
       });
 
       // 获取音乐内容
