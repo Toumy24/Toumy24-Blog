@@ -14,7 +14,7 @@ export class VexMusicManager {
       baseStaveWidth: options.baseStaveWidth || 250,
       measuresPerLine: options.measuresPerLine || 4,
       lineHeight: options.lineHeight || 87,
-      clefSpaceWidth: options.clefSpaceWidth || 100
+      clefSpaceWidth: options.clefSpaceWidth || 160
     });
     this.renderer = null;
     this.initialized = false;
