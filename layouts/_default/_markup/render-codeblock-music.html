@@ -1,4 +1,2 @@
 ﻿{{- $content := .Inner | strings.TrimSpace -}}
-<div class="vex-music-score"
-     data-content="{{ $content | jsonify }}"> 
-</div>
+<div class="vex-music-score" data-content="{{ $content | safeAttr }}"></div>
