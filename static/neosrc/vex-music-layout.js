@@ -8,7 +8,7 @@ export class MusicLayout {
     this.baseStaveWidth = options.baseStaveWidth || 250;  // 基础小节宽度
     this.measuresPerLine = options.measuresPerLine || 4;   // 每行小节数
     this.lineHeight = options.lineHeight || 87;           // 行间距
-    this.clefSpaceWidth = options.clefSpaceWidth || 100;  // 谱号和拍号占用的额外宽度
+    this.clefSpaceWidth = options.clefSpaceWidth || 160;  // 谱号和拍号占用的额外宽度
     this.padding = options.padding || 10;                 // 画布内边距
   }
 
