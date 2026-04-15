@@ -32,32 +32,26 @@ async function renderAllMusicScores() {
         continue;
       }
 
-      // VexFlow v4 方式：4个小节一行，支持自适应宽度
+      // VexFlow v4 方式：4个小节一行，第一行作为标准宽度
       const baseStaveWidth = 250;  // 基础小节宽度
       const measuresPerLine = 4;
       const lineHeight = 87;  // 行间距
       const totalLines = Math.ceil(ast.measures.length / measuresPerLine);
       const height = lineHeight * totalLines;  // 根据行数计算高度
 
-      // 计算总宽度（考虑自适应）
-      let totalWidth = 0;
-      const staveWidths = [];
-      for (let i = 0; i < ast.measures.length; i++) {
+      // 计算第一行的总宽度（含自适应）
+      let firstLineWidth = 0;
+      const firstLineMeasures = Math.min(measuresPerLine, ast.measures.length);
+      for (let i = 0; i < firstLineMeasures; i++) {
         const isFirstMeasure = (i === 0);
         // 第一小节需要容纳treble clef和time signature，自动增加宽度
         const width = isFirstMeasure ? baseStaveWidth + 100 : baseStaveWidth;
-        staveWidths.push(width);
-        
-        const colIndex = i % measuresPerLine;
-        if (colIndex === measuresPerLine - 1 || i === ast.measures.length - 1) {
-          // 计算这一行的总宽度
-          let lineWidth = 0;
-          for (let j = i - colIndex; j <= i; j++) {
-            lineWidth += staveWidths[j];
-          }
-          totalWidth = Math.max(totalWidth, lineWidth);
-        }
+        firstLineWidth += width;
       }
+
+      // 基于第一行宽度计算每个小节的统一宽度
+      const staveWidth = firstLineWidth / measuresPerLine;
+      const totalWidth = firstLineWidth;  // 所有行宽度与第一行相同
 
       // 创建SVG renderer
       const renderer = new VF.Renderer(container, VF.Renderer.Backends.SVG);
@@ -77,15 +71,12 @@ async function renderAllMusicScores() {
         const lineIndex = Math.floor(midx / measuresPerLine);
         const colIndex = midx % measuresPerLine;
         
-        // 计算当前小节的X坐标（累加前面的宽度）
-        let currentX = 10;
-        for (let i = lineIndex * measuresPerLine; i < midx; i++) {
-          currentX += staveWidths[i];
-        }
+        // 计算当前小节的X坐标
+        const currentX = 10 + colIndex * staveWidth;
         const currentY = 40 + lineIndex * lineHeight;
         
-        // 创建小节stave，使用动态宽度
-        const stave = new VF.Stave(currentX, currentY, staveWidths[midx]);
+        // 创建小节stave，使用统一宽度
+        const stave = new VF.Stave(currentX, currentY, staveWidth);
 
         if (midx === 0) {
           stave.addClef('treble')
@@ -136,14 +127,14 @@ async function renderAllMusicScores() {
         const voice = new VF.Voice({ num_beats: beatsPerMeasure, beat_value: 4 });
         voice.addTickables(notesList);
 
-        stavesAndVoices.push({ stave, voice, measureIndex: midx });
+        stavesAndVoices.push({ stave, voice });
       });
 
       // 为每一对stave和voice应用formatter
-      stavesAndVoices.forEach(({ stave, voice, measureIndex }) => {
+      stavesAndVoices.forEach(({ stave, voice }) => {
         const formatter = new VF.Formatter()
             .joinVoices([voice])
-            .format([voice], staveWidths[measureIndex] - 20);
+            .format([voice], staveWidth - 20);
         
         voice.draw(context, stave);
       });
