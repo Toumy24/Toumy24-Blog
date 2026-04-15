@@ -8,12 +8,13 @@ categories:
   - 前端项目
 draft: false
 math: true
+
 ---
 
 
 ```music
-title: 测试
+title: 小星星
 key: C
 time: 4/4
-C4/4 D#4/4 E4/4 F4/4 | r/4 G4/4 A4/4 B4/4
+C4/4 C4/4 C4/4 D4/4 | E4/2 C4/4 C4/4 | E4/2 D4/4 D4/4
 ```
