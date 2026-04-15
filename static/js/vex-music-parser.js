@@ -2079,6 +2079,13 @@ var withErrorMessage = function(p) {
     return alt2(p)(fail("Expected " + msg));
   };
 };
+var $$try = function(v) {
+  return function(v1, more, lift3, $$throw, done) {
+    return v(v1, more, lift3, function(v2, err) {
+      return $$throw(new ParseState(v2.value0, v2.value1, v1.value2), err);
+    }, done);
+  };
+};
 var sepBy1 = function(p) {
   return function(sep) {
     return bind2(p)(function(a) {
@@ -2549,7 +2556,7 @@ var eq4 = /* @__PURE__ */ eq(/* @__PURE__ */ eqArray(/* @__PURE__ */ eqRec2(/* @
 var pitchParser = /* @__PURE__ */ bind3(/* @__PURE__ */ satisfy(function(c) {
   return c >= "A" && c <= "G";
 }))(function(letter) {
-  return bind3(optionMaybe(choice2([applySecond3($$char("#"))(pure3(Sharp.value)), applySecond3($$char("b"))(pure3(Flat.value)), pure3(Natural.value)])))(function(accidental) {
+  return bind3(optionMaybe(choice2([$$try(applySecond3($$char("#"))(pure3(Sharp.value))), $$try(applySecond3($$char("b"))(pure3(Flat.value))), pure3(Natural.value)])))(function(accidental) {
     return bind3(bind3(optionMaybe(digit))(function(v) {
       if (v instanceof Nothing) {
         return pure3(4);
@@ -2613,7 +2620,7 @@ var durationParser = /* @__PURE__ */ bind3(digit)(function(d) {
   })());
 });
 var noteParser = /* @__PURE__ */ discard2(skipSpaces)(function() {
-  return bind3(choice2([applySecond3(string("r"))(pure3(Rest.value)), pure3(Note.value)]))(function(noteType) {
+  return bind3(choice2([$$try(applySecond3(string("r"))(pure3(Rest.value))), pure3(Note.value)]))(function(noteType) {
     return bind3((function() {
       if (noteType instanceof Rest) {
         return pure3(Nothing.value);
