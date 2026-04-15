@@ -1,0 +1,388 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>VexFlow Music Debug - Independent Test</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            padding: 20px; 
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fafafa;
+        }
+        h1 { color: #333; border-bottom: 3px solid #007bff; padding-bottom: 10px; }
+        h2 { color: #555; margin-top: 40px; }
+        
+        .section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        
+        .status { 
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .status-item {
+            flex: 1;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .status-ok { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status-waiting { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        
+        .log-container {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 6px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin: 20px 0;
+        }
+        .log-entry { margin: 5px 0; }
+        .log-debug { color: #00aaff; }
+        .log-success { color: #00ff00; }
+        .log-error { color: #ff4444; }
+        .log-warn { color: #ffaa00; }
+        
+        .music-input {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        textarea {
+            font-family: monospace;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            min-height: 120px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        button:hover { background: #0056b3; }
+        
+        .music-block {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 300px;
+        }
+        
+        .error-box {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .success-box {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎵 VexFlow Music Notation - Debug Test</h1>
+    <p>这是一个完全独立的测试页面，用于调试音乐块的解析和渲染。</p>
+    
+    <div class="section">
+        <h2>Status Check</h2>
+        <div class="status">
+            <div class="status-item" id="vexflow-status">
+                <div style="font-size: 12px; margin-bottom: 5px;">VexFlow</div>
+                <div id="vexflow-status-icon">⏳</div>
+            </div>
+            <div class="status-item" id="parser-status">
+                <div style="font-size: 12px; margin-bottom: 5px;">Parser</div>
+                <div id="parser-status-icon">⏳</div>
+            </div>
+            <div class="status-item" id="overall-status">
+                <div style="font-size: 12px; margin-bottom: 5px;">Overall</div>
+                <div id="overall-status-icon">⏳</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Debug Output</h2>
+        <div class="log-container" id="log-output"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Test Input</h2>
+        <div class="music-input">
+            <label>Music Content:</label>
+            <textarea id="music-content" placeholder="输入音乐块内容...">title: 测试
+key: C
+time: 4/4
+C4/4 D#4/4 E4/4 F4/4 | r/4 G4/4 A4/4 B4/4</textarea>
+            <button onclick="testParsing()">Parse & Render</button>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Render Output</h2>
+        <div class="music-block" id="render-output">
+            <p style="color: #999; text-align: center; margin-top: 50px;">Rendering will appear here...</p>
+        </div>
+    </div>
+    
+    <!-- Vexflow Library -->
+    <script src="https://cdn.jsdelivr.net/npm/vexflow@4/build/cjs/vexflow.js"></script>
+    
+    <!-- Parser Module -->
+    <script type="module" id="parser-module">
+        // 这里会被动态创建
+    </script>
+    
+    <script>
+        // ==================== Debug Logging System ====================
+        function addLog(msg, type = 'debug') {
+            const container = document.getElementById('log-output');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            container.appendChild(entry);
+            container.scrollTop = container.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${msg}`);
+        }
+        
+        function updateStatus(id, icon, state) {
+            const elem = document.getElementById(id);
+            const iconElem = document.getElementById(`${id}-icon`);
+            elem.className = `status-item status-${state}`;
+            iconElem.textContent = {
+                'ok': '✓',
+                'error': '✗',
+                'waiting': '⏳'
+            }[state];
+        }
+        
+        // ==================== VexFlow Check ====================
+        addLog('1. Checking VexFlow library...', 'debug');
+        
+        let vexflowReady = false;
+        let vexflowTimeout = setTimeout(() => {
+            addLog('VexFlow failed to load (timeout)', 'error');
+            updateStatus('vexflow-status', '✗', 'error');
+        }, 5000);
+        
+        const checkVexflow = setInterval(() => {
+            if (window.Vex && window.Vex.Flow) {
+                clearInterval(checkVexflow);
+                clearTimeout(vexflowTimeout);
+                vexflowReady = true;
+                addLog('VexFlow loaded successfully! Version: ' + (window.Vex.Flow.VERSION || 'unknown'), 'success');
+                updateStatus('vexflow-status', '✓', 'ok');
+                if (globalThis.parserReady) {
+                    updateStatus('overall-status', '✓', 'ok');
+                }
+            }
+        }, 100);
+        
+        // ==================== Parser Creation ====================
+        addLog('2. Creating parser from vex-music-parser.js...', 'debug');
+        
+        // 动态加载parser.js（如果存在于同目录）
+        let parseMusicBlock = null;
+        let parserReady = false;
+        
+        fetch('./vex-music-parser.js')
+            .then(r => r.text())
+            .then(code => {
+                addLog('Parser code loaded, executing...', 'debug');
+                // 创建一个模块上下文
+                const module = { exports: {} };
+                const moduleFunc = new Function('module', 'exports', code);
+                moduleFunc(module, module.exports);
+                parseMusicBlock = module.exports.parseMusicBlock;
+                
+                if (typeof parseMusicBlock === 'function') {
+                    parserReady = true;
+                    globalThis.parserReady = true;
+                    addLog('Parser ready!', 'success');
+                    updateStatus('parser-status', '✓', 'ok');
+                    if (vexflowReady) {
+                        updateStatus('overall-status', '✓', 'ok');
+                    }
+                } else {
+                    addLog('ERROR: parseMusicBlock is not a function', 'error');
+                    updateStatus('parser-status', '✗', 'error');
+                }
+            })
+            .catch(err => {
+                addLog('Could not load parser from ./vex-music-parser.js: ' + err.message, 'warn');
+                addLog('Using fallback: empty parser', 'debug');
+                // Fallback: 简单的mock parser供测试使用
+                parseMusicBlock = (input) => {
+                    try {
+                        const lines = input.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('title:') && !l.startsWith('key:') && !l.startsWith('time:'));
+                        const notes = [];
+                        lines.forEach(line => {
+                            const parts = line.split(/\s+/);
+                            parts.forEach(part => {
+                                if (part === '|') return;
+                                if (part === 'r') {
+                                    notes.push({ noteType: 'Rest', pitch: null, duration: 4 });
+                                } else {
+                                    const match = part.match(/([A-G])(#|b)?(\d)?(\/)(\d)/);
+                                    if (match) {
+                                        notes.push({
+                                            noteType: 'Note',
+                                            pitch: {
+                                                letter: match[1],
+                                                accidental: match[2] === '#' ? 'Sharp' : match[2] === 'b' ? 'Flat' : 'Natural',
+                                                octave: parseInt(match[3] || '4')
+                                            },
+                                            duration: parseInt(match[5] || '4')
+                                        });
+                                    }
+                                }
+                            });
+                        });
+                        return {
+                            title: undefined,
+                            key: 'C',
+                            time: '4/4',
+                            measures: [notes]
+                        };
+                    } catch (e) {
+                        return { measures: [] };
+                    }
+                };
+                parserReady = true;
+                globalThis.parserReady = true;
+                addLog('Fallback parser initialized', 'warn');
+                updateStatus('parser-status', '⚠', 'waiting');
+            });
+        
+        // ==================== Test Function ====================
+        async function testParsing() {
+            const renderOutput = document.getElementById('render-output');
+            renderOutput.innerHTML = '<p style="color: #999; text-align: center;">Processing...</p>';
+            
+            if (!vexflowReady) {
+                addLog('ERROR: VexFlow not ready', 'error');
+                renderOutput.innerHTML = '<div class="error-box">Error: VexFlow not loaded</div>';
+                return;
+            }
+            
+            if (!parserReady || !parseMusicBlock) {
+                addLog('ERROR: Parser not ready', 'error');
+                renderOutput.innerHTML = '<div class="error-box">Error: Parser not ready</div>';
+                return;
+            }
+            
+            const musicContent = document.getElementById('music-content').value;
+            addLog('Parsing content: ' + musicContent.substring(0, 50) + '...', 'debug');
+            
+            try {
+                const ast = parseMusicBlock(musicContent);
+                addLog('Parse result: ' + JSON.stringify(ast).substring(0, 100) + '...', 'debug');
+                
+                if (!ast.measures || ast.measures.length === 0) {
+                    addLog('ERROR: No measures in parse result', 'error');
+                    renderOutput.innerHTML = '<div class="error-box">Parse failed: No measures found</div>';
+                    return;
+                }
+                
+                addLog(`Successfully parsed ${ast.measures.length} measure(s)`, 'success');
+                
+                // Render with VexFlow
+                renderWithVexFlow(ast, renderOutput);
+                
+            } catch (error) {
+                addLog('Parse exception: ' + error.message, 'error');
+                renderOutput.innerHTML = '<div class="error-box">Parse error: ' + error.message + '</div>';
+            }
+        }
+        
+        function renderWithVexFlow(ast, container) {
+            try {
+                const VF = window.Vex.Flow;
+                container.innerHTML = '';
+                
+                addLog('Creating VexFlow Factory...', 'debug');
+                const factory = new VF.Factory({
+                    renderer: { 
+                        width: Math.min(container.offsetWidth - 40, 900), 
+                        height: 280 
+                    }
+                });
+                
+                const system = factory.System();
+                
+                const voices = ast.measures.map((measure, idx) => {
+                    addLog(`Creating voice for measure ${idx + 1}...`, 'debug');
+                    const notes = measure.map(n => {
+                        if (n.noteType === 'Rest') {
+                            return factory.StaveNote({ keys: ['b/4'], duration: `${n.duration}r` });
+                        } else {
+                            const p = n.pitch;
+                            const acc = p.accidental === 'Sharp' ? '#' : p.accidental === 'Flat' ? 'b' : '';
+                            const key = `${p.letter}${acc}/${p.octave}`;
+                            return factory.StaveNote({
+                                keys: [key],
+                                duration: String(n.duration)
+                            });
+                        }
+                    });
+                    return factory.Voice().addTickables(notes);
+                });
+                
+                addLog('Adding stave to system...', 'debug');
+                system.addStave({
+                    voices: voices,
+                    width: container.offsetWidth - 60
+                })
+                    .addClef('treble')
+                    .addTimeSignature(ast.time || '4/4')
+                    .addKeySignature(ast.key || 'C');
+                
+                if (ast.title) {
+                    factory.drawText(ast.title, { x: 20, y: 20, font: { size: 20 } });
+                }
+                
+                addLog('Drawing...', 'debug');
+                factory.draw();
+                
+                const svg = factory.context.svg;
+                svg.setAttribute('viewBox', `0 0 ${svg.getAttribute('width')} ${svg.getAttribute('height')}`);
+                container.innerHTML = '';
+                container.appendChild(svg);
+                
+                addLog('Rendering complete!', 'success');
+            } catch (error) {
+                addLog('VexFlow rendering error: ' + error.message, 'error');
+                container.innerHTML = '<div class="error-box">Rendering error: ' + error.message + '</div>';
+            }
+        }
+        
+        addLog('Page initialization complete. Ready for testing.', 'success');
+    </script>
+</body>
+</html>
