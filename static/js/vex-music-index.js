@@ -64,6 +64,3 @@ export function initRender() {
     renderAllMusicScores();
   }
 }
-
-// 自动初始化
-initRender();

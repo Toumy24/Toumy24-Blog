@@ -27,11 +27,22 @@ export class VexMusicRenderer {
       // 清空容器
       container.innerHTML = '';
 
+      // 设置容器样式以支持自适应宽度
+      container.style.overflow = 'auto';
+      container.style.maxWidth = '100%';
+
       // 创建SVG Renderer
       const renderer = new this.VF.Renderer(container, this.VF.Renderer.Backends.SVG);
       const canvasWidth = layout.totalWidth + layout.padding * 2;
       const canvasHeight = layout.totalHeight + layout.padding * 2;
       renderer.resize(canvasWidth, canvasHeight);
+
+      // 设置SVG样式以支持自适应
+      const svg = container.querySelector('svg');
+      if (svg) {
+        svg.style.maxWidth = '100%';
+        svg.style.height = 'auto';
+      }
 
       const context = renderer.getContext();
       context.setFont('Arial', 10);
