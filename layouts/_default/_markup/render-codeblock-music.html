@@ -1,2 +1,2 @@
 ﻿{{- $content := .Inner | strings.TrimSpace -}}
-<div class="vex-music-score" data-content="{{ $content }}"></div>
+<div class="vex-music-score" data-content="{{ $content | safeHTMLAttr }}"></div>

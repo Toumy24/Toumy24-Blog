@@ -24,17 +24,8 @@ async function renderAllMusicScores() {
       const psModule = await import('./vex-music-parser.js');
       const rawContent = block.dataset.content || '';
       
-      // jsonify生成的是JSON字符串，需要解析
-      let contentStr = rawContent;
-      if (rawContent.startsWith('"') && rawContent.endsWith('"')) {
-        try {
-          contentStr = JSON.parse(rawContent);
-        } catch (e) {
-          console.warn('[VexMusic] Failed to parse JSON content, using raw');
-        }
-      }
-      
-      const ast = psModule.parseMusicBlock(contentStr);
+      // safeHTMLAttr会转义HTML，但JavaScript读到的是正确的内容
+      const ast = psModule.parseMusicBlock(rawContent);
 
       if (!ast.measures || ast.measures.length === 0) {
         container.innerHTML = `<p style="color:#f66">音乐块解析失败，请检查格式</p>`;
