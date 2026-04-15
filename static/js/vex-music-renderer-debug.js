@@ -44,7 +44,7 @@ async function renderAllMusicScores() {
 
     try {
       console.log('[VexMusic Debug] 4. Importing parser module');
-      const psModule = await import('./vex-music-parser.js');
+      const psModule = await import('./vex-music-parser.bak');
       console.log('[VexMusic Debug] Module imported:', psModule);
       console.log('[VexMusic Debug] parseMusicBlock function:', typeof psModule.parseMusicBlock);
 
