@@ -1,4 +1,4 @@
-﻿{{- $content := .Inner | trim -}}
+﻿{{- $content := .Inner | trim " " -}}
 <div class="vex-music-score"
      data-content="{{ $content | safeHTMLAttr }}">
 </div>
