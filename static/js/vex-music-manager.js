@@ -6,15 +6,11 @@
 import { MusicLoader } from './vex-music-loader.js';
 import { MusicLayout } from './vex-music-layout.js';
 import { VexMusicRenderer } from './vex-music-renderer.js';
-import { MUSIC_LAYOUT_CONFIG } from './vex-music-config.js';
 
 export class VexMusicManager {
   constructor(options = {}) {
     this.loader = new MusicLoader();
-    this.layout = new MusicLayout({
-      ...MUSIC_LAYOUT_CONFIG,
-      ...options
-    });
+    this.layout = new MusicLayout(options);
     this.renderer = null;
     this.initialized = false;
     this.initPromise = null;
