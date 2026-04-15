@@ -384,7 +384,7 @@ G4/4 G4/4 D4/4 | E4/4 F#4/4 G4/4 | D4/4 D4/4 C#4/4 | B4/2 C#4/4 | D4/2 r/4 | G4/
                 addLog('Creating VexFlow Renderer...', 'debug');
                 
                 // VexFlow v4 方式：为每个小节创建一行
-                const statuWidth = 700;  // 固定每行宽度
+                const statuWidth = 500;  // 减小每行宽度以避免换行
                 const height = 130 * ast.measures.length;  // 每个小节130px高度
                 
                 // 创建SVG renderer
