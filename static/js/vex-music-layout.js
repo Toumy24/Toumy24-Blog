@@ -3,16 +3,16 @@
  * 负责计算小节布局、宽度、坐标等
  */
 
-import { MUSIC_LAYOUT_CONFIG } from './vex-music-config.js';
+import { MUSIC_LAYOUT_CONFIG } from "./vex-music-config.js";
 
 export class MusicLayout {
   constructor(options = {}) {
-    const cfg = {...MUSIC_LAYOUT_CONFIG, ...options}
-    this.baseStaveWidth = cfg.baseStaveWidth;  // 基础小节宽度
-    this.measuresPerLine = cfg.measuresPerLine;   // 每行小节数
-    this.lineHeight = cfg.lineHeight;           // 行间距
+    const cfg = { ...MUSIC_LAYOUT_CONFIG, ...options };
+    this.baseStaveWidth = cfg.baseStaveWidth; // 基础小节宽度
+    this.measuresPerLine = cfg.measuresPerLine; // 每行小节数
+    this.lineHeight = cfg.lineHeight; // 行间距
     this.clefSpaceWidth = cfg.clefSpaceWidth; // 谱号和拍号占用的额外宽度
-    this.padding = cfg.padding;                 // 画布内边距
+    this.padding = cfg.padding; // 画布内边距
   }
 
   /**
@@ -22,20 +22,21 @@ export class MusicLayout {
    */
   calculate(measureCount) {
     if (measureCount <= 0) {
-      throw new Error('Measure count must be greater than 0');
+      throw new Error("Measure count must be greater than 0");
     }
 
     const firstMeasureWidth = this.baseStaveWidth + this.clefSpaceWidth;
     const otherMeasureWidth = this.baseStaveWidth;
 
     // 第一行总宽 = 第一小节 + 剩余小节
-    const totalWidth = firstMeasureWidth + otherMeasureWidth * (this.measuresPerLine - 1);
+    const totalWidth =
+      firstMeasureWidth + otherMeasureWidth * (this.measuresPerLine - 1);
     const totalLines = Math.ceil(measureCount / this.measuresPerLine);
     const totalHeight = this.lineHeight * totalLines;
 
     return {
-      firstMeasureWidth,   // 每行第一小节宽度（含谱号位置）
-      otherMeasureWidth,   // 其余小节宽度
+      firstMeasureWidth, // 每行第一小节宽度（含谱号位置）
+      otherMeasureWidth, // 其余小节宽度
       totalWidth,
       totalHeight,
       totalLines,
@@ -50,12 +51,17 @@ export class MusicLayout {
     const colIndex = measureIndex % layout.measuresPerLine;
 
     const isFirstInLine = colIndex === 0;
-    const width = isFirstInLine ? layout.firstMeasureWidth : layout.otherMeasureWidth;
+    const width = isFirstInLine
+      ? layout.firstMeasureWidth
+      : layout.otherMeasureWidth;
 
     // x：第一小节从 padding 起，后续小节要跳过 firstMeasureWidth
-    const x = colIndex === 0
-      ? layout.padding
-      : layout.padding + layout.firstMeasureWidth + (colIndex - 1) * layout.otherMeasureWidth;
+    const x =
+      colIndex === 0
+        ? layout.padding
+        : layout.padding +
+          layout.firstMeasureWidth +
+          (colIndex - 1) * layout.otherMeasureWidth;
 
     const y = layout.padding + lineIndex * layout.lineHeight;
 
