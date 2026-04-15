@@ -77,12 +77,10 @@ excerpt_link: Read More
 injector:
   head_begin: # Inject code snippet right after <head>
   # head_end: # Inject code snippet right before </head>
-  head_end: |
+  head_end:
     <script src="https://cdn.jsdelivr.net/npm/vexflow@4/build/cjs/vexflow.js"></script>
-
-    <!-- 音乐渲染模块（使用module，支持ES6导入） -->
     <script type="module" 
-            src="{{ "neosrc/vex-music-renderer-v1.js" | relURL }}">
+            src="{{ "js/vex-music-renderer-v1.js" | relURL }}">
     </script>
   body_begin: # Inject code snippet right after <body>
   body_end: # Inject code snippet right before </body>
