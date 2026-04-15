@@ -136,10 +136,10 @@
         <h2>Test Input</h2>
         <div class="music-input">
             <label>Music Content:</label>
-            <textarea id="music-content" placeholder="输入音乐块内容...">title: 小星星 - 变奏版
-key: G
-time: 3/4
-G4/4 G4/4 D4/4 | E4/4 F#4/4 G4/4 | D4/4 D4/4 C#4/4 | B4/2 C#4/4 | D4/2 r/4 | G4/4 G4/4 D4/4 | E4/4 F#4/4 G4/4</textarea>
+            <textarea id="music-content" placeholder="输入音乐块内容...">title: 小星星 - 完整版
+key: C
+time: 4/4
+C4/4 C4/4 C4/4 D4/4 | E4/2 C4/4 C4/4 | E4/2 D4/4 D4/4 | C4/4 C4/4 C4/4 D4/4 | E4/2 r/4 r/4 | G4/4 G4/4 G4/4 A4/4 | B4/2 G4/4 G4/4 | B4/2 A4/4 A4/4 | G4/4 G4/4 G4/4 C4/4 | D4/2 E4/4 C4/4</textarea>
             <button onclick="testParsing()">Parse & Render</button>
         </div>
     </div>
@@ -383,13 +383,16 @@ G4/4 G4/4 D4/4 | E4/4 F#4/4 G4/4 | D4/4 D4/4 C#4/4 | B4/2 C#4/4 | D4/2 r/4 | G4/
                 
                 addLog('Creating VexFlow Renderer...', 'debug');
                 
-                // VexFlow v4 方式：为每个小节创建一行
-                const statuWidth = 500;  // 减小每行宽度以避免换行
-                const height = 130 * ast.measures.length;  // 每个小节130px高度
+                // VexFlow v4 方式：4个小节一行
+                const statuWidth = 250;  // 每个小节宽度，一行4个
+                const measuresPerLine = 4;
+                const lineHeight = 87;  // 行间距缩短三分之一
+                const totalLines = Math.ceil(ast.measures.length / measuresPerLine);
+                const height = lineHeight * totalLines;  // 根据行数计算高度
                 
                 // 创建SVG renderer
                 const renderer = new VF.Renderer(container, VF.Renderer.Backends.SVG);
-                renderer.resize(statuWidth + 40, height);
+                renderer.resize(statuWidth * measuresPerLine + 40, height + 40);
                 
                 const context = renderer.getContext();
                 context.setFont('Arial', 10);
@@ -406,8 +409,14 @@ G4/4 G4/4 D4/4 | E4/4 F#4/4 G4/4 | D4/4 D4/4 C#4/4 | B4/2 C#4/4 | D4/2 r/4 | G4/
                 ast.measures.forEach((measure, midx) => {
                     addLog(`Processing measure ${midx + 1} with ${measure.length} notes...`, 'debug');
                     
-                    // 为每个小节创建独立的一行stave
-                    const stave = new VF.Stave(10, currentY, statuWidth);
+                    // 计算当前小节在第几行第几列
+                    const lineIndex = Math.floor(midx / measuresPerLine);
+                    const colIndex = midx % measuresPerLine;
+                    const currentX = 10 + colIndex * statuWidth;
+                    const currentY = 40 + lineIndex * lineHeight;
+                    
+                    // 创建小节stave
+                    const stave = new VF.Stave(currentX, currentY, statuWidth);
                     
                     if (midx === 0) {
                         stave.addClef('treble')
@@ -465,8 +474,6 @@ G4/4 G4/4 D4/4 | E4/4 F#4/4 G4/4 | D4/4 D4/4 C#4/4 | B4/2 C#4/4 | D4/2 r/4 | G4/
                     voice.addTickables(notesList);
                     
                     stavesAndVoices.push({ stave, voice });
-                    
-                    currentY += 130;  // 每行固定高度
                 });
                 
                 // 为每一对stave和voice应用formatter
@@ -474,7 +481,7 @@ G4/4 G4/4 D4/4 | E4/4 F#4/4 G4/4 | D4/4 D4/4 C#4/4 | B4/2 C#4/4 | D4/2 r/4 | G4/
                 stavesAndVoices.forEach(({ stave, voice }) => {
                     const formatter = new VF.Formatter()
                         .joinVoices([voice])
-                        .format([voice], statuWidth - 50);
+                        .format([voice], statuWidth - 20);
                     
                     voice.draw(context, stave);
                 });
