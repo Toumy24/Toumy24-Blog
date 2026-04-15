@@ -76,7 +76,14 @@ excerpt_link: Read More
 # Make sure your code snippet is safeHTML
 injector:
   head_begin: # Inject code snippet right after <head>
-  head_end: # Inject code snippet right before </head>
+  # head_end: # Inject code snippet right before </head>
+  head_end: |
+    <!-- VexFlow CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/vexflow@4/build/cjs/vexflow.js" defer></script>
+    
+    <!-- 我们的音乐插件 -->
+    <script src="/js/vex-music-parser.js" type="module" defer></script>
+    <script src="/js/vex-music-renderer.js" type="module" defer></script>
   body_begin: # Inject code snippet right after <body>
   body_end: # Inject code snippet right before </body>
   sidebar_begin: # Inject code snippet right after <aside>
