@@ -381,86 +381,96 @@ C4/4 D#4/4 E4/4 F4/4 | r/4 G4/4 A4/4 B4/4</textarea>
                 const VF = window.Vex.Flow;
                 container.innerHTML = '';
                 
-                addLog('Creating VexFlow Factory...', 'debug');
-                const factory = new VF.Factory({
-                    renderer: { 
-                        width: Math.min(container.offsetWidth - 40, 900), 
-                        height: 280 
-                    }
-                });
+                addLog('Creating VexFlow Renderer...', 'debug');
                 
-                const system = factory.System();
+                // VexFlow v4 方式：创建renderer而不是factory
+                const width = Math.min(container.offsetWidth - 40, 900);
+                const height = 300;
                 
-                // 解析时间签名获得节拍信息
+                // 创建SVG renderer
+                const renderer = new VF.Renderer(container, VF.Renderer.Backends.SVG);
+                renderer.resize(width, height);
+                
+                const context = renderer.getContext();
+                context.setFont('Arial', 10);
+                
+                addLog('Creating staves...', 'debug');
+                const staves = [];
+                const voices = [];
+                
+                // 为每个小节创建stave
+                const stavesPerLine = 1;  // 每行1个小节
+                let currentX = 10;
+                const statuWidth = width - 20;
+                
+                // 解析时间签名
                 const timeMatch = (ast.time || '4/4').match(/(\d+)\/(\d+)/);
                 const beatsPerMeasure = timeMatch ? parseInt(timeMatch[1]) : 4;
-                const beatUnit = timeMatch ? parseInt(timeMatch[2]) : 4;
                 
-                addLog(`Time signature: ${ast.time} (${beatsPerMeasure}/${beatUnit})`, 'debug');
-                
-                const voices = ast.measures.map((measure, idx) => {
-                    addLog(`Creating voice for measure ${idx + 1} with ${measure.length} notes...`, 'debug');
+                ast.measures.forEach((measure, midx) => {
+                    addLog(`Creating stave for measure ${midx + 1} with ${measure.length} notes...`, 'debug');
                     
+                    const stave = new VF.Stave(currentX, 40, statuWidth / stavesPerLine);
+                    
+                    if (midx === 0) {
+                        stave.addClef('treble')
+                             .addTimeSignature(ast.time || '4/4')
+                             .addKeySignature(ast.key || 'C');
+                    }
+                    
+                    stave.setContext(context).draw();
+                    staves.push(stave);
+                    
+                    // 创建voice并添加notes
                     const notes = measure.map((n, nidx) => {
                         if (n.noteType === 'Rest') {
                             const dur = String(n.duration);
                             addLog(`  Note ${nidx}: Rest duration=${dur}`, 'debug');
-                            return factory.StaveNote({ keys: ['b/4'], duration: dur + 'r' });
+                            return new VF.GhostNote({ duration: dur });
                         } else {
                             const p = n.pitch;
                             const acc = p.accidental === 'Sharp' ? '#' : p.accidental === 'Flat' ? 'b' : '';
                             const key = `${p.letter}${acc}/${p.octave}`;
                             const dur = String(n.duration);
                             addLog(`  Note ${nidx}: ${key} duration=${dur}`, 'debug');
-                            return factory.StaveNote({
+                            return new VF.StaveNote({
                                 keys: [key],
                                 duration: dur
                             });
                         }
                     });
                     
-                    const voice = factory.Voice({ time: ast.time || '4/4' });
+                    const voice = new VF.Voice({ num_beats: beatsPerMeasure, beat_value: 4 });
                     voice.addTickables(notes);
-                    return voice;
+                    voices.push(voice);
+                    
+                    currentX += statuWidth / stavesPerLine + 10;
                 });
                 
-                addLog('Adding stave to system...', 'debug');
-                system.addStave({
-                    voices: voices,
-                    width: container.offsetWidth - 60
-                })
-                    .addClef('treble')
-                    .addTimeSignature(ast.time || '4/4')
-                    .addKeySignature(ast.key || 'C');
+                // Formatter处理音符布局
+                addLog('Formatting voices...', 'debug');
+                const formatter = new VF.Formatter()
+                    .joinVoices(voices)
+                    .format(voices, statuWidth - 20);
                 
-                // 注意：factory.drawText 在VexFlow v4中可能不存在
-                // 如果需要标题，可以在HTML中单独显示
+                // 绘制voices
+                addLog('Drawing notes...', 'debug');
+                voices.forEach(v => v.draw(context, staves[0]));
+                
+                // 添加标题
                 if (ast.title) {
                     addLog(`Title: ${ast.title}`, 'debug');
-                }
-                
-                addLog('Drawing...', 'debug');
-                factory.draw();
-                
-                const svg = factory.context.svg;
-                svg.setAttribute('viewBox', `0 0 ${svg.getAttribute('width')} ${svg.getAttribute('height')}`);
-                container.innerHTML = '';
-                
-                // 如果有标题，添加到上方
-                if (ast.title) {
                     const titleDiv = document.createElement('div');
                     titleDiv.style.cssText = 'font-size: 18px; font-weight: bold; margin-bottom: 10px;';
                     titleDiv.textContent = ast.title;
-                    container.appendChild(titleDiv);
+                    container.parentNode.insertBefore(titleDiv, container);
                 }
-                
-                container.appendChild(svg);
                 
                 addLog('Rendering complete!', 'success');
                 const successBox = document.createElement('div');
                 successBox.className = 'success-box';
                 successBox.textContent = '✓ 乐谱渲染成功！';
-                container.parentNode.insertBefore(successBox, container);
+                container.parentNode.insertBefore(successBox, container.nextSibling);
             } catch (error) {
                 addLog('VexFlow rendering error: ' + error.message + ' (stack: ' + error.stack + ')', 'error');
                 container.innerHTML = '<div class="error-box"><strong>Rendering Error:</strong><br>' + error.message + '</div>';
