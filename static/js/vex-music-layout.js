@@ -3,13 +3,16 @@
  * 负责计算小节布局、宽度、坐标等
  */
 
+import { MUSIC_LAYOUT_CONFIG } from './vex-music-config.js';
+
 export class MusicLayout {
   constructor(options = {}) {
-    this.baseStaveWidth = options.baseStaveWidth || 250;  // 基础小节宽度
-    this.measuresPerLine = options.measuresPerLine || 4;   // 每行小节数
-    this.lineHeight = options.lineHeight || 87;           // 行间距
-    this.clefSpaceWidth = options.clefSpaceWidth || 160;  // 谱号和拍号占用的额外宽度
-    this.padding = options.padding || 10;                 // 画布内边距
+    const cfg = {...MUSIC_LAYOUT_CONFIG, ...options}
+    this.baseStaveWidth = cfg.baseStaveWidth;  // 基础小节宽度
+    this.measuresPerLine = cfg.measuresPerLine;   // 每行小节数
+    this.lineHeight = cfg.lineHeight;           // 行间距
+    this.clefSpaceWidth = cfg.clefSpaceWidth; // 谱号和拍号占用的额外宽度
+    this.padding = cfg.padding;                 // 画布内边距
   }
 
   /**

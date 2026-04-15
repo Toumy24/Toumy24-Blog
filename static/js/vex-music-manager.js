@@ -6,15 +6,14 @@
 import { MusicLoader } from './vex-music-loader.js';
 import { MusicLayout } from './vex-music-layout.js';
 import { VexMusicRenderer } from './vex-music-renderer.js';
+import { MUSIC_LAYOUT_CONFIG } from './vex-music-config.js';
 
 export class VexMusicManager {
   constructor(options = {}) {
     this.loader = new MusicLoader();
     this.layout = new MusicLayout({
-      baseStaveWidth: options.baseStaveWidth || 250,
-      measuresPerLine: options.measuresPerLine || 4,
-      lineHeight: options.lineHeight || 87,
-      clefSpaceWidth: options.clefSpaceWidth || 160
+      ...MUSIC_LAYOUT_CONFIG,
+      ...options
     });
     this.renderer = null;
     this.initialized = false;
