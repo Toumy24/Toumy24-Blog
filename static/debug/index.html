@@ -212,8 +212,15 @@ C4/4 D#4/4 E4/4 F4/4 | r/4 G4/4 A4/4 B4/4</textarea>
         let parserReady = false;
         
         fetch('./vex-music-parser.js')
-            .then(r => r.text())
+            .then(r => {
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                return r.text();
+            })
             .then(code => {
+                // 验证是否是有效的JS代码
+                if (code.includes('<') || code.includes('<!DOCTYPE')) {
+                    throw new Error('Received HTML instead of JavaScript');
+                }
                 addLog('Parser code loaded, executing...', 'debug');
                 // 创建一个模块上下文
                 const module = { exports: {} };
@@ -224,7 +231,7 @@ C4/4 D#4/4 E4/4 F4/4 | r/4 G4/4 A4/4 B4/4</textarea>
                 if (typeof parseMusicBlock === 'function') {
                     parserReady = true;
                     globalThis.parserReady = true;
-                    addLog('Parser ready!', 'success');
+                    addLog('Real Parser ready!', 'success');
                     updateStatus('parser-status', '✓', 'ok');
                     if (vexflowReady) {
                         updateStatus('overall-status', '✓', 'ok');
@@ -235,45 +242,93 @@ C4/4 D#4/4 E4/4 F4/4 | r/4 G4/4 A4/4 B4/4</textarea>
                 }
             })
             .catch(err => {
-                addLog('Could not load parser from ./vex-music-parser.js: ' + err.message, 'warn');
-                addLog('Using fallback: empty parser', 'debug');
-                // Fallback: 简单的mock parser供测试使用
+                addLog('Could not load real parser: ' + err.message, 'warn');
+                addLog('Using fallback simple parser', 'warn');
+                
+                // Fallback: 简单的parser供测试使用
                 parseMusicBlock = (input) => {
                     try {
-                        const lines = input.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('title:') && !l.startsWith('key:') && !l.startsWith('time:'));
-                        const notes = [];
+                        const lines = input.split('\n').map(l => l.trim()).filter(l => l);
+                        
+                        let title = undefined;
+                        let key = 'C';
+                        let time = '4/4';
+                        const notesStr = [];
+                        
+                        // 解析元数据
                         lines.forEach(line => {
-                            const parts = line.split(/\s+/);
+                            if (line.startsWith('title:')) {
+                                title = line.substring(6).trim();
+                            } else if (line.startsWith('key:')) {
+                                key = line.substring(4).trim();
+                            } else if (line.startsWith('time:')) {
+                                time = line.substring(5).trim();
+                            } else {
+                                notesStr.push(line);
+                            }
+                        });
+                        
+                        const fullLine = notesStr.join(' ');
+                        const measures = [];
+                        
+                        // 按 | 分割小节
+                        const measureParts = fullLine.split('|').map(p => p.trim()).filter(p => p);
+                        
+                        measureParts.forEach((measure, midx) => {
+                            const notes = [];
+                            const parts = measure.split(/\s+/);
+                            
                             parts.forEach(part => {
-                                if (part === '|') return;
-                                if (part === 'r') {
-                                    notes.push({ noteType: 'Rest', pitch: null, duration: 4 });
+                                if (!part || part === '|') return;
+                                
+                                // 处理休止符 r/4
+                                if (part.startsWith('r')) {
+                                    const match = part.match(/r(?:\/(\d))?/);
+                                    const duration = match && match[1] ? parseInt(match[1]) : 4;
+                                    notes.push({ 
+                                        noteType: 'Rest', 
+                                        pitch: null, 
+                                        duration: duration 
+                                    });
                                 } else {
-                                    const match = part.match(/([A-G])(#|b)?(\d)?(\/)(\d)/);
+                                    // 处理音符 C4/4, D#4/4 等
+                                    const match = part.match(/([A-G])(#|b)?(\d)?(?:\/(\d))?/);
                                     if (match) {
+                                        const letter = match[1];
+                                        const accidental = match[2] === '#' ? 'Sharp' : match[2] === 'b' ? 'Flat' : 'Natural';
+                                        const octave = match[3] ? parseInt(match[3]) : 4;
+                                        const duration = match[4] ? parseInt(match[4]) : 4;
+                                        
                                         notes.push({
                                             noteType: 'Note',
                                             pitch: {
-                                                letter: match[1],
-                                                accidental: match[2] === '#' ? 'Sharp' : match[2] === 'b' ? 'Flat' : 'Natural',
-                                                octave: parseInt(match[3] || '4')
+                                                letter: letter,
+                                                accidental: accidental,
+                                                octave: octave
                                             },
-                                            duration: parseInt(match[5] || '4')
+                                            duration: duration
                                         });
                                     }
                                 }
                             });
+                            
+                            if (notes.length > 0) {
+                                measures.push(notes);
+                            }
                         });
+                        
                         return {
-                            title: undefined,
-                            key: 'C',
-                            time: '4/4',
-                            measures: [notes]
+                            title: title,
+                            key: key,
+                            time: time,
+                            measures: measures.length > 0 ? measures : [[]]
                         };
                     } catch (e) {
-                        return { measures: [] };
+                        addLog('Fallback parser error: ' + e.message, 'error');
+                        return { title: undefined, key: 'C', time: '4/4', measures: [[]] };
                     }
                 };
+                
                 parserReady = true;
                 globalThis.parserReady = true;
                 addLog('Fallback parser initialized', 'warn');
@@ -336,22 +391,37 @@ C4/4 D#4/4 E4/4 F4/4 | r/4 G4/4 A4/4 B4/4</textarea>
                 
                 const system = factory.System();
                 
+                // 解析时间签名获得节拍信息
+                const timeMatch = (ast.time || '4/4').match(/(\d+)\/(\d+)/);
+                const beatsPerMeasure = timeMatch ? parseInt(timeMatch[1]) : 4;
+                const beatUnit = timeMatch ? parseInt(timeMatch[2]) : 4;
+                
+                addLog(`Time signature: ${ast.time} (${beatsPerMeasure}/${beatUnit})`, 'debug');
+                
                 const voices = ast.measures.map((measure, idx) => {
-                    addLog(`Creating voice for measure ${idx + 1}...`, 'debug');
-                    const notes = measure.map(n => {
+                    addLog(`Creating voice for measure ${idx + 1} with ${measure.length} notes...`, 'debug');
+                    
+                    const notes = measure.map((n, nidx) => {
                         if (n.noteType === 'Rest') {
-                            return factory.StaveNote({ keys: ['b/4'], duration: `${n.duration}r` });
+                            const dur = String(n.duration);
+                            addLog(`  Note ${nidx}: Rest duration=${dur}`, 'debug');
+                            return factory.StaveNote({ keys: ['b/4'], duration: dur + 'r' });
                         } else {
                             const p = n.pitch;
                             const acc = p.accidental === 'Sharp' ? '#' : p.accidental === 'Flat' ? 'b' : '';
                             const key = `${p.letter}${acc}/${p.octave}`;
+                            const dur = String(n.duration);
+                            addLog(`  Note ${nidx}: ${key} duration=${dur}`, 'debug');
                             return factory.StaveNote({
                                 keys: [key],
-                                duration: String(n.duration)
+                                duration: dur
                             });
                         }
                     });
-                    return factory.Voice().addTickables(notes);
+                    
+                    const voice = factory.Voice({ time: ast.time || '4/4' });
+                    voice.addTickables(notes);
+                    return voice;
                 });
                 
                 addLog('Adding stave to system...', 'debug');
@@ -376,9 +446,13 @@ C4/4 D#4/4 E4/4 F4/4 | r/4 G4/4 A4/4 B4/4</textarea>
                 container.appendChild(svg);
                 
                 addLog('Rendering complete!', 'success');
+                const successBox = document.createElement('div');
+                successBox.className = 'success-box';
+                successBox.textContent = '✓ 乐谱渲染成功！';
+                container.parentNode.insertBefore(successBox, container);
             } catch (error) {
-                addLog('VexFlow rendering error: ' + error.message, 'error');
-                container.innerHTML = '<div class="error-box">Rendering error: ' + error.message + '</div>';
+                addLog('VexFlow rendering error: ' + error.message + ' (stack: ' + error.stack + ')', 'error');
+                container.innerHTML = '<div class="error-box"><strong>Rendering Error:</strong><br>' + error.message + '</div>';
             }
         }
         
