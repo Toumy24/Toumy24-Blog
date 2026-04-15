@@ -90,9 +90,6 @@ export class VexMusicRenderer {
         voice.draw(context, stave);
       });
 
-      // 提交渲染
-      renderer.commit();
-
       // 添加标题
       if (ast.title) {
         const titleDiv = document.createElement('div');
