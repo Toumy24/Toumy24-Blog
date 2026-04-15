@@ -383,9 +383,9 @@ C4/4 D#4/4 E4/4 F4/4 | r/4 G4/4 A4/4 B4/4</textarea>
                 
                 addLog('Creating VexFlow Renderer...', 'debug');
                 
-                // VexFlow v4 方式：创建renderer而不是factory
+                // VexFlow v4 方式：为每个小节单独创建stave
                 const width = Math.min(container.offsetWidth - 40, 900);
-                const height = 300;
+                const height = 150 * ast.measures.length;  // 每个小节150px高度
                 
                 // 创建SVG renderer
                 const renderer = new VF.Renderer(container, VF.Renderer.Backends.SVG);
@@ -395,22 +395,19 @@ C4/4 D#4/4 E4/4 F4/4 | r/4 G4/4 A4/4 B4/4</textarea>
                 context.setFont('Arial', 10);
                 
                 addLog('Creating staves...', 'debug');
-                const staves = [];
-                const voices = [];
-                
-                // 为每个小节创建stave
-                const stavesPerLine = 1;  // 每行1个小节
-                let currentX = 10;
-                const statuWidth = width - 20;
+                const stavesAndVoices = [];
                 
                 // 解析时间签名
                 const timeMatch = (ast.time || '4/4').match(/(\d+)\/(\d+)/);
                 const beatsPerMeasure = timeMatch ? parseInt(timeMatch[1]) : 4;
                 
+                let currentY = 40;
+                
                 ast.measures.forEach((measure, midx) => {
-                    addLog(`Creating stave for measure ${midx + 1} with ${measure.length} notes...`, 'debug');
+                    addLog(`Processing measure ${midx + 1} with ${measure.length} notes...`, 'debug');
                     
-                    const stave = new VF.Stave(currentX, 40, statuWidth / stavesPerLine);
+                    // 为每个小节创建独立的stave
+                    const stave = new VF.Stave(10, currentY, width - 30);
                     
                     if (midx === 0) {
                         stave.addClef('treble')
@@ -419,43 +416,59 @@ C4/4 D#4/4 E4/4 F4/4 | r/4 G4/4 A4/4 B4/4</textarea>
                     }
                     
                     stave.setContext(context).draw();
-                    staves.push(stave);
                     
-                    // 创建voice并添加notes
-                    const notes = measure.map((n, nidx) => {
+                    // 创建notes
+                    const notesList = [];
+                    measure.forEach((n, nidx) => {
                         if (n.noteType === 'Rest') {
                             const dur = String(n.duration);
                             addLog(`  Note ${nidx}: Rest duration=${dur}`, 'debug');
-                            return new VF.GhostNote({ duration: dur });
+                            // 使用RestNote而不是GhostNote
+                            const restNote = new VF.RestNote({ duration: dur });
+                            notesList.push(restNote);
                         } else {
                             const p = n.pitch;
-                            const acc = p.accidental === 'Sharp' ? '#' : p.accidental === 'Flat' ? 'b' : '';
-                            const key = `${p.letter}${acc}/${p.octave}`;
                             const dur = String(n.duration);
-                            addLog(`  Note ${nidx}: ${key} duration=${dur}`, 'debug');
-                            return new VF.StaveNote({
+                            const key = `${p.letter}/${p.octave}`;
+                            
+                            const staveNote = new VF.StaveNote({
                                 keys: [key],
                                 duration: dur
                             });
+                            
+                            // 添加accidental（升号/降号）
+                            if (p.accidental === 'Sharp') {
+                                staveNote.addModifier(new VF.Accidental('#'), 0);
+                                addLog(`  Note ${nidx}: ${key}# duration=${dur}`, 'debug');
+                            } else if (p.accidental === 'Flat') {
+                                staveNote.addModifier(new VF.Accidental('b'), 0);
+                                addLog(`  Note ${nidx}: ${key}b duration=${dur}`, 'debug');
+                            } else {
+                                addLog(`  Note ${nidx}: ${key} duration=${dur}`, 'debug');
+                            }
+                            
+                            notesList.push(staveNote);
                         }
                     });
                     
+                    // 创建voice
                     const voice = new VF.Voice({ num_beats: beatsPerMeasure, beat_value: 4 });
-                    voice.addTickables(notes);
-                    voices.push(voice);
+                    voice.addTickables(notesList);
                     
-                    currentX += statuWidth / stavesPerLine + 10;
+                    stavesAndVoices.push({ stave, voice });
+                    
+                    currentY += 120;
                 });
                 
-                // Formatter处理音符布局
-                addLog('Formatting voices...', 'debug');
-                const formatter = new VF.Formatter()
-                    .joinVoices(voices)
-                    .format(voices, statuWidth - 20);
-                
-                // 绘制voices
-                addLog('Drawing notes...', 'debug');
-                voices.forEach(v => v.draw(context, staves[0]));
+                // 为每一对stave和voice应用formatter
+                addLog('Formatting and drawing...', 'debug');
+                stavesAndVoices.forEach(({ stave, voice }) => {
+                    const formatter = new VF.Formatter()
+                        .joinVoices([voice])
+                        .format([voice], width - 50);
+                    
+                    voice.draw(context, stave);
+                });
                 
                 // 添加标题
                 if (ast.title) {
