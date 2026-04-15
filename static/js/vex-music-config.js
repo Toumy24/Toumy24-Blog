@@ -6,6 +6,6 @@ export const MUSIC_LAYOUT_CONFIG = {
   baseStaveWidth: 250,   // 基础小节宽度
   measuresPerLine: 4,    // 每行小节数
   lineHeight: 87,        // 行间距
-  clefSpaceWidth: 80,   // 谱号和拍号占用的额外宽度
+  clefSpaceWidth: 95,   // 谱号和拍号占用的额外宽度
   padding: 10,           // 画布内边距
 };
