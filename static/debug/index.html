@@ -136,10 +136,10 @@
         <h2>Test Input</h2>
         <div class="music-input">
             <label>Music Content:</label>
-            <textarea id="music-content" placeholder="输入音乐块内容...">title: 测试
-key: C
-time: 4/4
-C4/4 D#4/4 E4/4 F4/4 | r/4 G4/4 A4/4 B4/4</textarea>
+            <textarea id="music-content" placeholder="输入音乐块内容...">title: 小星星 - 变奏版
+key: G
+time: 3/4
+G4/4 G4/4 D4/4 | E4/4 F#4/4 G4/4 | D4/4 D4/4 C#4/4 | B4/2 C#4/4 | D4/2 r/4 | G4/4 G4/4 D4/4 | E4/4 F#4/4 G4/4</textarea>
             <button onclick="testParsing()">Parse & Render</button>
         </div>
     </div>
@@ -383,13 +383,13 @@ C4/4 D#4/4 E4/4 F4/4 | r/4 G4/4 A4/4 B4/4</textarea>
                 
                 addLog('Creating VexFlow Renderer...', 'debug');
                 
-                // VexFlow v4 方式：为每个小节单独创建stave
-                const width = Math.min(container.offsetWidth - 40, 900);
-                const height = 150 * ast.measures.length;  // 每个小节150px高度
+                // VexFlow v4 方式：为每个小节创建一行
+                const statuWidth = 700;  // 固定每行宽度
+                const height = 130 * ast.measures.length;  // 每个小节130px高度
                 
                 // 创建SVG renderer
                 const renderer = new VF.Renderer(container, VF.Renderer.Backends.SVG);
-                renderer.resize(width, height);
+                renderer.resize(statuWidth + 40, height);
                 
                 const context = renderer.getContext();
                 context.setFont('Arial', 10);
@@ -406,8 +406,8 @@ C4/4 D#4/4 E4/4 F4/4 | r/4 G4/4 A4/4 B4/4</textarea>
                 ast.measures.forEach((measure, midx) => {
                     addLog(`Processing measure ${midx + 1} with ${measure.length} notes...`, 'debug');
                     
-                    // 为每个小节创建独立的stave
-                    const stave = new VF.Stave(10, currentY, width - 30);
+                    // 为每个小节创建独立的一行stave
+                    const stave = new VF.Stave(10, currentY, statuWidth);
                     
                     if (midx === 0) {
                         stave.addClef('treble')
@@ -466,7 +466,7 @@ C4/4 D#4/4 E4/4 F4/4 | r/4 G4/4 A4/4 B4/4</textarea>
                     
                     stavesAndVoices.push({ stave, voice });
                     
-                    currentY += 120;
+                    currentY += 130;  // 每行固定高度
                 });
                 
                 // 为每一对stave和voice应用formatter
@@ -474,7 +474,7 @@ C4/4 D#4/4 E4/4 F4/4 | r/4 G4/4 A4/4 B4/4</textarea>
                 stavesAndVoices.forEach(({ stave, voice }) => {
                     const formatter = new VF.Formatter()
                         .joinVoices([voice])
-                        .format([voice], width - 50);
+                        .format([voice], statuWidth - 50);
                     
                     voice.draw(context, stave);
                 });
