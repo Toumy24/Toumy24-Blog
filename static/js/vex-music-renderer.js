@@ -58,45 +58,32 @@ export class VexMusicRenderer {
       ast.measures.forEach((measure, measureIndex) => {
         const position = this._getMeasurePosition(measureIndex, ast.measures.length, layout);
         
-        // 创建Stave
-        const stave = new this.VF.Stave(
-          position.x,
-          position.y,
-          position.width
-        );
+        const stave = new this.VF.Stave(position.x, position.y, position.width);
 
-        // 第一小节添加clef、time signature、key signature
         if (measureIndex === 0) {
           stave.addClef('treble')
-               .addTimeSignature(ast.time || '4/4')
-               .addKeySignature(ast.key || 'C');
+              .addTimeSignature(ast.time || '4/4')
+              .addKeySignature(ast.key || 'C');
         }
 
         stave.setContext(context).draw();
 
-        // 创建Notes
         const notesList = this._createNotes(measure);
-
-        // 创建Voice
         const voice = new this.VF.Voice({
           num_beats: beatsPerMeasure,
           beat_value: 4
         });
         voice.addTickables(notesList);
 
-        stavesAndVoices.push({
-          stave,
-          voice,
-          measureIndex
-        });
+        stavesAndVoices.push({ stave, voice, measureIndex, position }); // ← 存 position
       });
 
       // 应用Formatter并绘制voices
-      stavesAndVoices.forEach(({ stave, voice }) => {
+      stavesAndVoices.forEach(({ stave, voice, position }) => {  // ← 解构 position
         const formatter = new this.VF.Formatter();
         formatter
           .joinVoices([voice])
-          .format([voice], layout.staveWidth - 20);
+          .format([voice], position.width - 20);  // ← 用各自小节的真实宽度
 
         voice.draw(context, stave);
       });
@@ -127,9 +114,14 @@ export class VexMusicRenderer {
     const lineIndex = Math.floor(measureIndex / layout.measuresPerLine);
     const colIndex = measureIndex % layout.measuresPerLine;
 
-    const x = layout.padding + colIndex * layout.staveWidth;
+    const isFirstInLine = colIndex === 0;
+    const width = isFirstInLine ? layout.firstMeasureWidth : layout.otherMeasureWidth;
+
+    const x = colIndex === 0
+      ? layout.padding
+      : layout.padding + layout.firstMeasureWidth + (colIndex - 1) * layout.otherMeasureWidth;
+
     const y = layout.padding + lineIndex * layout.lineHeight;
-    const width = layout.staveWidth;
 
     return { x, y, width };
   }

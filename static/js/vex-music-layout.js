@@ -17,18 +17,24 @@ export class MusicLayout {
    * @param {number} measureCount - 小节总数
    * @returns {Object} 包含布局信息的对象
    */
-    calculate(measureCount) {
+  calculate(measureCount) {
+    if (measureCount <= 0) {
+      throw new Error('Measure count must be greater than 0');
+    }
+
     const firstMeasureWidth = this.baseStaveWidth + this.clefSpaceWidth;
     const otherMeasureWidth = this.baseStaveWidth;
 
+    // 第一行总宽 = 第一小节 + 剩余小节
     const totalWidth = firstMeasureWidth + otherMeasureWidth * (this.measuresPerLine - 1);
     const totalLines = Math.ceil(measureCount / this.measuresPerLine);
+    const totalHeight = this.lineHeight * totalLines;
 
     return {
-      firstMeasureWidth,   // ← 新增：第一小节专属宽度
-      otherMeasureWidth,   // ← 新增：其余小节宽度
+      firstMeasureWidth,   // 每行第一小节宽度（含谱号位置）
+      otherMeasureWidth,   // 其余小节宽度
       totalWidth,
-      totalHeight: this.lineHeight * totalLines,
+      totalHeight,
       totalLines,
       measuresPerLine: this.measuresPerLine,
       lineHeight: this.lineHeight,
@@ -40,13 +46,13 @@ export class MusicLayout {
     const lineIndex = Math.floor(measureIndex / layout.measuresPerLine);
     const colIndex = measureIndex % layout.measuresPerLine;
 
-    // 每行的第一个小节（colIndex === 0）用 firstMeasureWidth，其余用 otherMeasureWidth
     const isFirstInLine = colIndex === 0;
     const width = isFirstInLine ? layout.firstMeasureWidth : layout.otherMeasureWidth;
 
-    // x 坐标：第一小节之后的偏移要加上 firstMeasureWidth 的差值
-    const x = layout.padding 
-      + (colIndex === 0 ? 0 : layout.firstMeasureWidth + (colIndex - 1) * layout.otherMeasureWidth);
+    // x：第一小节从 padding 起，后续小节要跳过 firstMeasureWidth
+    const x = colIndex === 0
+      ? layout.padding
+      : layout.padding + layout.firstMeasureWidth + (colIndex - 1) * layout.otherMeasureWidth;
 
     const y = layout.padding + lineIndex * layout.lineHeight;
 
