@@ -423,9 +423,18 @@ C4/4 D#4/4 E4/4 F4/4 | r/4 G4/4 A4/4 B4/4</textarea>
                         if (n.noteType === 'Rest') {
                             const dur = String(n.duration);
                             addLog(`  Note ${nidx}: Rest duration=${dur}`, 'debug');
-                            // 使用RestNote而不是GhostNote
-                            const restNote = new VF.RestNote({ duration: dur });
-                            notesList.push(restNote);
+                            // VexFlow v4: 用StaveNote加上'b/4'的key和'r'后缀duration来表示休止符
+                            try {
+                                const restNote = new VF.StaveNote({
+                                    keys: ['b/4'],
+                                    duration: dur + 'r'  // 'r' 后缀表示rest
+                                });
+                                notesList.push(restNote);
+                            } catch (e) {
+                                addLog(`  Note ${nidx}: Rest creation failed, using GhostNote: ${e.message}`, 'warn');
+                                const ghostNote = new VF.GhostNote({ duration: dur });
+                                notesList.push(ghostNote);
+                            }
                         } else {
                             const p = n.pitch;
                             const dur = String(n.duration);
