@@ -17,73 +17,39 @@ export class MusicLayout {
    * @param {number} measureCount - 小节总数
    * @returns {Object} 包含布局信息的对象
    */
-  calculate(measureCount) {
-    if (measureCount <= 0) {
-      throw new Error('Measure count must be greater than 0');
-    }
+    calculate(measureCount) {
+    const firstMeasureWidth = this.baseStaveWidth + this.clefSpaceWidth;
+    const otherMeasureWidth = this.baseStaveWidth;
 
-    // 计算第一行的总宽度（含自适应）
-    let firstLineWidth = 0;
-    const firstLineMeasures = Math.min(this.measuresPerLine, measureCount);
-    
-    for (let i = 0; i < firstLineMeasures; i++) {
-      const isFirstMeasure = (i === 0);
-      // 第一小节需要容纳treble clef和time signature，自动增加宽度
-      const width = isFirstMeasure 
-        ? this.baseStaveWidth + this.clefSpaceWidth 
-        : this.baseStaveWidth;
-      firstLineWidth += width;
-    }
-
-    // 基于第一行宽度计算每个小节的统一宽度
-    const staveWidth = firstLineWidth / this.measuresPerLine;
-    const totalWidth = firstLineWidth;  // 所有行宽度与第一行相同
-    
-    // 计算行数和总高度
+    const totalWidth = firstMeasureWidth + otherMeasureWidth * (this.measuresPerLine - 1);
     const totalLines = Math.ceil(measureCount / this.measuresPerLine);
-    const height = this.lineHeight * totalLines;
 
     return {
-      staveWidth,              // 每个小节的宽度
-      totalWidth,              // 画布总宽度
-      totalHeight: height,     // 画布总高度
-      firstLineWidth,          // 第一行宽度（等于总宽度）
-      totalLines,              // 总行数
+      firstMeasureWidth,   // ← 新增：第一小节专属宽度
+      otherMeasureWidth,   // ← 新增：其余小节宽度
+      totalWidth,
+      totalHeight: this.lineHeight * totalLines,
+      totalLines,
       measuresPerLine: this.measuresPerLine,
       lineHeight: this.lineHeight,
-      padding: this.padding
+      padding: this.padding,
     };
   }
 
-  /**
-   * 计算指定小节的位置和大小
-   * @param {number} measureIndex - 小节索引（从0开始）
-   * @param {Object} layout - 布局信息（来自calculate方法）
-   * @returns {Object} 包含x, y, width, height的对象
-   */
   getMeasurePosition(measureIndex, layout) {
     const lineIndex = Math.floor(measureIndex / layout.measuresPerLine);
     const colIndex = measureIndex % layout.measuresPerLine;
-    
-    const x = layout.padding + colIndex * layout.staveWidth;
+
+    // 每行的第一个小节（colIndex === 0）用 firstMeasureWidth，其余用 otherMeasureWidth
+    const isFirstInLine = colIndex === 0;
+    const width = isFirstInLine ? layout.firstMeasureWidth : layout.otherMeasureWidth;
+
+    // x 坐标：第一小节之后的偏移要加上 firstMeasureWidth 的差值
+    const x = layout.padding 
+      + (colIndex === 0 ? 0 : layout.firstMeasureWidth + (colIndex - 1) * layout.otherMeasureWidth);
+
     const y = layout.padding + lineIndex * layout.lineHeight;
-    const width = layout.staveWidth;
-    const height = layout.lineHeight;
 
-    return { x, y, width, height };
-  }
-
-  /**
-   * 计算所有小节的位置
-   * @param {number} measureCount - 小节总数
-   * @param {Object} layout - 布局信息
-   * @returns {Array<Object>} 位置信息数组
-   */
-  getAllMeasurePositions(measureCount, layout) {
-    const positions = [];
-    for (let i = 0; i < measureCount; i++) {
-      positions.push(this.getMeasurePosition(i, layout));
-    }
-    return positions;
+    return { x, y, width, height: layout.lineHeight };
   }
 }
