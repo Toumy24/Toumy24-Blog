@@ -1364,6 +1364,9 @@ var split = function(sep) {
     return s.split(sep);
   };
 };
+var toLower = function(s) {
+  return s.toLowerCase();
+};
 var trim = function(s) {
   return s.trim();
 };
@@ -2588,7 +2591,7 @@ var pitchParser = /* @__PURE__ */ bind3(/* @__PURE__ */ satisfy(function(c) {
         })());
       }
       ;
-      throw new Error("Failed pattern match at Music.Parser (line 35, column 35 - line 43, column 15): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Music.Parser (line 92, column 35 - line 100, column 15): " + [v.constructor.name]);
     }))(function(octave) {
       return pure3({
         letter,
@@ -2598,6 +2601,46 @@ var pitchParser = /* @__PURE__ */ bind3(/* @__PURE__ */ satisfy(function(c) {
     });
   });
 });
+var parseClef = function(s) {
+  var v = toLower(trim(s));
+  if (v === "treble") {
+    return "treble";
+  }
+  ;
+  if (v === "g") {
+    return "treble";
+  }
+  ;
+  if (v === "bass") {
+    return "bass";
+  }
+  ;
+  if (v === "f") {
+    return "bass";
+  }
+  ;
+  if (v === "alto") {
+    return "alto";
+  }
+  ;
+  if (v === "c") {
+    return "alto";
+  }
+  ;
+  if (v === "tenor") {
+    return "tenor";
+  }
+  ;
+  if (v === "percussion") {
+    return "percussion";
+  }
+  ;
+  if (v === "perc") {
+    return "percussion";
+  }
+  ;
+  return "treble";
+};
 var durationParser = /* @__PURE__ */ bind3(digit)(function(d) {
   return pure3((function() {
     if (d === "1") {
@@ -2630,13 +2673,13 @@ var noteParser = /* @__PURE__ */ discard2(skipSpaces)(function() {
         return map5(Just.create)(pitchParser);
       }
       ;
-      throw new Error("Failed pattern match at Music.Parser (line 20, column 12 - line 22, column 33): " + [noteType.constructor.name]);
+      throw new Error("Failed pattern match at Music.Parser (line 62, column 12 - line 64, column 33): " + [noteType.constructor.name]);
     })())(function(pitch) {
       return discard2(skipSpaces)(function() {
         return bind3(bind3(optionMaybe(applySecond3($$char("/"))(durationParser)))((function() {
-          var $65 = fromMaybe(4);
-          return function($66) {
-            return pure3($65($66));
+          var $67 = fromMaybe(4);
+          return function($68) {
+            return pure3($67($68));
           };
         })()))(function(duration) {
           return pure3({
@@ -2663,7 +2706,7 @@ var parseScore = function(input) {
   var measureSeparator = applyFirst2(applySecond3(skipSpaces)(string("|")))(skipSpaces);
   var lines = split("\n")(trim(input));
   var notesLines = filter2(function(l) {
-    return !(startsWith$prime("title:")(l) || (startsWith$prime("key:")(l) || startsWith$prime("time:")(l)));
+    return !(startsWith$prime("title:")(l) || (startsWith$prime("key:")(l) || (startsWith$prime("time:")(l) || startsWith$prime("clef:")(l))));
   })(lines);
   var notesLine = joinWith(" ")(notesLines);
   var measures = (function() {
@@ -2676,34 +2719,36 @@ var parseScore = function(input) {
       return [];
     }
     ;
-    throw new Error("Failed pattern match at Music.Parser (line 81, column 16 - line 83, column 21): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Music.Parser (line 209, column 16 - line 211, column 21): " + [v.constructor.name]);
   })();
   var title2 = head(map1((function() {
-    var $67 = drop3(6);
-    return function($68) {
-      return trim($67($68));
+    var $69 = drop3(6);
+    return function($70) {
+      return trim($69($70));
     };
   })())(filter2(startsWith$prime("title:"))(lines)));
   var getMeta = function(prefix) {
     return function(defaultVal) {
       return fromMaybe(defaultVal)(head(map1((function() {
-        var $69 = drop3(length4(prefix));
-        return function($70) {
-          return trim($69($70));
+        var $71 = drop3(length4(prefix));
+        return function($72) {
+          return trim($71($72));
         };
       })())(filter2(startsWith$prime(prefix))(lines))));
     };
   };
   var key = getMeta("key:")("C");
   var time = getMeta("time:")("4/4");
+  var clef = parseClef(getMeta("clef:")("treble"));
   return {
     title: title2,
+    clef,
     key,
     time,
     measures: filter2((function() {
-      var $71 = eq4([]);
-      return function($72) {
-        return !$71($72);
+      var $73 = eq4([]);
+      return function($74) {
+        return !$73($74);
       };
     })())(measures)
   };
