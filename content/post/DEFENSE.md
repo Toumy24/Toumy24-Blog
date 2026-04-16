@@ -1,4 +1,10 @@
-﻿# markdown-music-notation 答辩讲稿
+﻿---
+title: "欢迎来到我的博客"
+date: 2021-06-01
+timezone: UTC+8
+draft: false
+---
+# markdown-music-notation 答辩讲稿
 
 > 用于答辩时参考的技术讲解稿
 
