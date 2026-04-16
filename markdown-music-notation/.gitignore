@@ -1,0 +1,5 @@
+﻿output/
+.spago/
+node_modules/
+.psci_modules/
+bower_components/
