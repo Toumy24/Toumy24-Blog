@@ -1,20 +1,36 @@
 ﻿/**
- * VexFlow Music Renderer - 初版保持兼容
- * 这是原始的vex-music-renderer.js，现在使用模块化架构
- * 
- * 使用方式：
- * 1. 在HTML中加载vexflow： <script src="https://cdn.jsdelivr.net/npm/vexflow@4/build/cjs/vexflow.js"></script>
- * 2. 在HTML中使用module脚本： <script type="module" src="vex-music-renderer.js"></script>
- * 3. 在markdown中使用： ```music\n content \n```
+ * VexFlow Music - 入口文件
+ * 自动扫描 .vex-music-score 元素并渲染乐谱
  */
+import { createEngine } from './vex-music-engine.js';
 
-import { renderAllMusicScores, initRender } from './vex-music-index.js';
+if (window.Vex?.Flow) {
+  const engine = createEngine();
 
-// 导出函数供外部使用
-window.VexMusicRender = {
-  renderAllMusicScores,
-  initRender
-};
+  const run = async () => {
+    const blocks = document.querySelectorAll('.vex-music-score');
+    if (!blocks.length) return;
 
-// 自动初始化
-initRender();
+    await engine.initialize();
+
+    for (const block of blocks) {
+      const container = document.createElement('div');
+      container.className = 'vex-music-container';
+      container.style.cssText = 'margin:30px 0;width:100%';
+      block.parentNode.insertBefore(container, block);
+
+      try {
+        await engine.parseAndRender(block.dataset.content || '', container);
+      } catch (e) {
+        console.error('[VexMusic]', e);
+        container.innerHTML = `<p style="color:#f66">音乐块渲染错误: ${e.message}</p>`;
+      }
+    }
+
+    blocks.forEach(b => b.remove());
+  };
+
+  document.readyState === 'loading'
+    ? document.addEventListener('DOMContentLoaded', run)
+    : run();
+}

@@ -1,175 +1,68 @@
 ﻿/**
- * VexFlow Music Renderer Module
- * 负责使用VexFlow API进行音乐符号渲染
+ * VexFlow Music Renderer
+ * 使用 VexFlow v4 API 将乐谱 AST 渲染为 SVG
  */
-
 export class VexMusicRenderer {
-  constructor(vexflow) {
-    this.VF = vexflow;
-    if (!this.VF) {
-      throw new Error('VexFlow is required');
-    }
+  constructor(VF) {
+    this.VF = VF;
   }
 
-  /**
-   * 渲染音乐到指定容器
-   * @param {Object} ast - 解析后的音乐AST
-   * @param {HTMLElement} container - 目标容器
-   * @param {Object} layout - 布局配置
-   * @param {Object} options - 额外选项
-   */
-  render(ast, container, layout, options = {}) {
-    try {
-      if (!ast.measures || ast.measures.length === 0) {
-        throw new Error('No measures to render');
-      }
+  render(ast, container, layout) {
+    container.innerHTML = '';
+    container.style.cssText = 'overflow:auto;max-width:100%';
 
-      // 清空容器
-      container.innerHTML = '';
+    const { VF } = this;
+    const renderer = new VF.Renderer(container, VF.Renderer.Backends.SVG);
+    renderer.resize(layout.totalWidth + layout.padding * 2, layout.totalHeight + layout.padding * 2);
 
-      // 设置容器样式以支持自适应宽度
-      container.style.overflow = 'auto';
-      container.style.maxWidth = '100%';
+    const svg = container.querySelector('svg');
+    if (svg) { svg.style.maxWidth = '100%'; svg.style.height = 'auto'; }
 
-      // 创建SVG Renderer
-      const renderer = new this.VF.Renderer(container, this.VF.Renderer.Backends.SVG);
-      const canvasWidth = layout.totalWidth + layout.padding * 2;
-      const canvasHeight = layout.totalHeight + layout.padding * 2;
-      renderer.resize(canvasWidth, canvasHeight);
+    const ctx = renderer.getContext();
+    ctx.setFont('Arial', 10);
 
-      // 设置SVG样式以支持自适应
-      const svg = container.querySelector('svg');
-      if (svg) {
-        svg.style.maxWidth = '100%';
-        svg.style.height = 'auto';
-      }
+    const time = ast.time || '4/4';
+    const beats = parseInt(time.split('/')[0]) || 4;
 
-      const context = renderer.getContext();
-      context.setFont('Arial', 10);
+    // 单遍渲染：创建 stave → 绘制 → 创建 voice → 格式化 → 绘制
+    ast.measures.forEach((measure, i) => {
+      const col = i % layout.measuresPerLine;
+      const w = col === 0 ? layout.firstMeasureWidth : layout.otherMeasureWidth;
+      const x = col === 0
+        ? layout.padding
+        : layout.padding + layout.firstMeasureWidth + (col - 1) * layout.otherMeasureWidth;
+      const y = layout.padding + Math.floor(i / layout.measuresPerLine) * layout.lineHeight;
 
-      // 收集所有stave和voice对
-      const stavesAndVoices = [];
+      const stave = new VF.Stave(x, y, w);
+      if (i === 0) stave.addClef('treble').addTimeSignature(time).addKeySignature(ast.key || 'C');
+      stave.setContext(ctx).draw();
 
-      // 解析时间签名
-      const timeMatch = (ast.time || '4/4').match(/(\d+)\/(\d+)/);
-      const beatsPerMeasure = timeMatch ? parseInt(timeMatch[1]) : 4;
-
-      // 为每个小节创建stave和voice
-      ast.measures.forEach((measure, measureIndex) => {
-        const position = this._getMeasurePosition(measureIndex, ast.measures.length, layout);
-        
-        const stave = new this.VF.Stave(position.x, position.y, position.width);
-
-        if (measureIndex === 0) {
-          stave.addClef('treble')
-              .addTimeSignature(ast.time || '4/4')
-              .addKeySignature(ast.key || 'C');
-        }
-
-        stave.setContext(context).draw();
-
-        const notesList = this._createNotes(measure);
-        const voice = new this.VF.Voice({
-          num_beats: beatsPerMeasure,
-          beat_value: 4
-        });
-        voice.addTickables(notesList);
-
-        stavesAndVoices.push({ stave, voice, measureIndex, position }); // ← 存 position
-      });
-
-      // 应用Formatter并绘制voices
-      stavesAndVoices.forEach(({ stave, voice, position }) => {  // ← 解构 position
-        const formatter = new this.VF.Formatter();
-        formatter
-          .joinVoices([voice])
-          .format([voice], position.width - 20);  // ← 用各自小节的真实宽度
-
-        voice.draw(context, stave);
-      });
-
-      // 添加标题
-      if (ast.title) {
-        const titleDiv = document.createElement('div');
-        titleDiv.style.cssText = 'font-size: 18px; font-weight: bold; margin-bottom: 10px;';
-        titleDiv.textContent = ast.title;
-        container.parentNode.insertBefore(titleDiv, container);
-      }
-
-      return {
-        success: true,
-        renderer,
-        container
-      };
-    } catch (error) {
-      throw new Error(`Rendering failed: ${error.message}`);
-    }
-  }
-
-  /**
-   * 根据测量索引计算其位置
-   * @private
-   */
-  _getMeasurePosition(measureIndex, totalMeasures, layout) {
-    const lineIndex = Math.floor(measureIndex / layout.measuresPerLine);
-    const colIndex = measureIndex % layout.measuresPerLine;
-
-    const isFirstInLine = colIndex === 0;
-    const width = isFirstInLine ? layout.firstMeasureWidth : layout.otherMeasureWidth;
-
-    const x = colIndex === 0
-      ? layout.padding
-      : layout.padding + layout.firstMeasureWidth + (colIndex - 1) * layout.otherMeasureWidth;
-
-    const y = layout.padding + lineIndex * layout.lineHeight;
-
-    return { x, y, width };
-  }
-
-  /**
-   * 从Note对象创建VexFlow StaveNote
-   * @private
-   */
-  _createNotes(measure) {
-    const notesList = [];
-
-    measure.forEach(noteData => {
-      if (noteData.noteType === 'Rest') {
-        // 创建休止符
-        try {
-          const restNote = new this.VF.StaveNote({
-            keys: ['b/4'],
-            duration: noteData.duration + 'r'  // 'r'后缀表示rest
-          });
-          notesList.push(restNote);
-        } catch (error) {
-          // 降级到GhostNote
-          const ghostNote = new this.VF.GhostNote({
-            duration: noteData.duration
-          });
-          notesList.push(ghostNote);
-        }
-      } else {
-        // 创建音符
-        const pitch = noteData.pitch;
-        const key = `${pitch.letter}/${pitch.octave}`;
-
-        const staveNote = new this.VF.StaveNote({
-          keys: [key],
-          duration: noteData.duration
-        });
-
-        // 添加临时变音
-        if (pitch.accidental === 'Sharp') {
-          staveNote.addModifier(new this.VF.Accidental('#'), 0);
-        } else if (pitch.accidental === 'Flat') {
-          staveNote.addModifier(new this.VF.Accidental('b'), 0);
-        }
-
-        notesList.push(staveNote);
-      }
+      const voice = new VF.Voice({ num_beats: beats, beat_value: 4 });
+      voice.addTickables(this._notes(measure));
+      new VF.Formatter().joinVoices([voice]).format([voice], w - 20);
+      voice.draw(ctx, stave);
     });
 
-    return notesList;
+    if (ast.title) {
+      const div = document.createElement('div');
+      div.style.cssText = 'font-size:18px;font-weight:bold;margin-bottom:10px';
+      div.textContent = ast.title;
+      container.parentNode.insertBefore(div, container);
+    }
+  }
+
+  /** @private 将 AST 音符数组转为 VexFlow StaveNote */
+  _notes(measure) {
+    const { VF } = this;
+    return measure.map(n => {
+      if (n.noteType === 'Rest') {
+        return new VF.StaveNote({ keys: ['b/4'], duration: n.duration + 'r' });
+      }
+      const { letter, accidental, octave } = n.pitch;
+      const note = new VF.StaveNote({ keys: [`${letter}/${octave}`], duration: n.duration });
+      if (accidental === 'Sharp') note.addModifier(new VF.Accidental('#'), 0);
+      else if (accidental === 'Flat') note.addModifier(new VF.Accidental('b'), 0);
+      return note;
+    });
   }
 }
