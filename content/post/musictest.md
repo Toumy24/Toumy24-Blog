@@ -1,5 +1,5 @@
 ﻿---
-title: "优雅地在我的博客中编写乐谱【2】"
+title: "音乐测试贴"
 date: 2026-04-15T14:00:00+08:00
 timezone: UTC+8
 tags: ["前端","JavaScript","vexflow","markdown"]
