@@ -13,8 +13,9 @@ math: true
 
 
 ```music
-title: 测试用例
+title: Twinkle Twinkle Little Star
 key: C
 time: 4/4
-C4/4 C4/4 C4/4 D4/4 | E4/2 C4/4 C4/4 | E4/2 D4/4 D4/4 | C4/4 C4/4 C4/4 D4/4 | E4/2 r/4 r/4 | G4/4 G4/4 G4/4 A4/4 | B4/2 G4/4 G4/4 | B4/2 A4/4 A4/4 | G4/4 G4/4 G4/4 C4/4 | D4/2 E4/4 C4/4
+clef: treble
+C4/4 C4/4 G4/4 G4/4 | A4/4 A4/4 G4/2 | F4/4 F4/4 E4/4 E4/4 | D4/4 D4/4 C4/2
 ```
