@@ -1,6 +1,6 @@
 ﻿---
 title: "通用语言教程-Rust 篇【3】所有权与借用"
-date: 2026-05-08T11:00:00+08:00
+date: 2026-05-07T11:00:00+08:00
 timezone: UTC+8
 cover: https://blog.24toumy.top/coverimg/rust.png
 tags: ["Rust","所有权","借用"]

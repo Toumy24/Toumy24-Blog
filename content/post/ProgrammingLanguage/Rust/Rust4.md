@@ -1,6 +1,6 @@
 ﻿---
 title: "通用语言教程-Rust 篇【4】函数、结构体与枚举"
-date: 2026-05-08T12:00:00+08:00
+date: 2026-05-07T12:00:00+08:00
 timezone: UTC+8
 cover: https://blog.24toumy.top/coverimg/rust.png
 tags: ["Rust","函数","结构体","枚举"]

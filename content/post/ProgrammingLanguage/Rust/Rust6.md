@@ -1,6 +1,6 @@
 ﻿---
 title: "通用语言教程-Rust 篇【6】Trait 与泛型"
-date: 2026-05-08T14:00:00+08:00
+date: 2026-05-07T14:00:00+08:00
 timezone: UTC+8
 cover: https://blog.24toumy.top/coverimg/rust.png
 tags: ["Rust","Trait","泛型"] 

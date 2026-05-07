@@ -1,6 +1,6 @@
 ﻿---
 title: "通用语言教程-Rust 篇【8】模块系统与智能指针"
-date: 2026-05-08T16:00:00+08:00
+date: 2026-05-07T16:00:00+08:00
 timezone: UTC+8
 cover: https://blog.24toumy.top/coverimg/rust.png
 tags: ["Rust","模块","智能指针","Cargo"]

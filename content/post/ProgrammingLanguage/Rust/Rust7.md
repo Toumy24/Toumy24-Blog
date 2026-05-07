@@ -1,6 +1,6 @@
 ﻿---
 title: "通用语言教程-Rust 篇【7】错误处理与生命周期"
-date: 2026-05-08T15:00:00+08:00
+date: 2026-05-07T15:00:00+08:00
 timezone: UTC+8
 cover: https://blog.24toumy.top/coverimg/rust.png
 tags: ["Rust","错误处理","生命周期"]
