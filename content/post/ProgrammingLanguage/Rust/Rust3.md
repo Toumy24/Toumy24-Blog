@@ -147,7 +147,7 @@ fn change(s: &mut String) {
 fn main() {
     let mut s = String::from("hello"); // 原变量也必须是 mut
     change(&mut s);
-    println!("{}", s); // hello, world
+    println!("{}", s); // hello, sekai
 }
 ```
 
@@ -184,10 +184,10 @@ fn main() {
 ```rust
 fn main() {
     // 字符串切片
-    let s = String::from("hello world");
+    let s = String::from("hello sekai");
     let hello = &s[0..5];  // 等价于 &s[..5]
     let world = &s[6..11]; // 等价于 &s[6..]
-    println!("{} {}", hello, world); // hello world
+    println!("{} {}", hello, world); // hello sekai
 
     // 数组切片
     let arr = [1, 2, 3, 4, 5];
@@ -200,7 +200,7 @@ fn main() {
 
 ```rust
 fn main() {
-    let s: &str = "hello, world"; // &str 类型，不可变引用，存储在程序的静态数据段
+    let s: &str = "hello, sekai"; // &str 类型，不可变引用，存储在程序的静态数据段
     println!("{}", s);
 }
 ```

@@ -127,7 +127,7 @@ fn main() {
     let mut s = String::from("hello");
     s.push(' ');          // 追加字符
     s.push_str("world");  // 追加字符串切片
-    println!("{}", s);    // hello world
+    println!("{}", s);    // hello sekai
 
     // 拼接（+ 运算符会移走左侧所有权）
     let s4 = String::from("Hello, ");
@@ -141,7 +141,7 @@ fn main() {
     let b = String::from(", ");
     let c = String::from("World!");
     let result = format!("{}{}{}", a, b, c);
-    println!("{}", result); // Hello, World!
+    println!("{}", result); // Hello, Sekai!
 
     // 常用方法
     let text = String::from("  Hello, Rust!  ");
@@ -213,7 +213,7 @@ fn main() {
     println!("{:?}", scores);
 
     // 基于旧值更新（统计词频的常用模式）
-    let text = "hello world hello rust hello";
+    let text = "hello sekai hello rust hello";
     let mut word_count: HashMap<&str, i32> = HashMap::new();
     for word in text.split_whitespace() {
         let count = word_count.entry(word).or_insert(0);

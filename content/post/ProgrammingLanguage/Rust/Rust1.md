@@ -16,9 +16,9 @@ Rust 是一门专注于**安全性、并发性与高性能**的系统级编程�
 
 > 如果你有 C++ 或 Python 的基础，你会发现 Rust 的部分概念似曾相识，但它的所有权机制是全新的思维方式，需要一些时间适应。
 
-## 从 Hello World 认识 Rust
+## 从 Hello Sekai 认识 Rust
 
-每一门语言的入门都从 Hello World 开始。首先确保你已安装 Rust 工具链，可通过 [rustup.rs](https://rustup.rs/) 一键安装。
+每一门语言的入门都从 Hello Sekai 开始。首先确保你已安装 Rust 工具链，可通过 [rustup.rs](https://rustup.rs/) 一键安装。
 
 ```bash
 # 检查安装是否成功
@@ -32,7 +32,7 @@ cargo --version
 
 ```rust
 fn main() {
-    println!("Hello, World!");
+    println!("Hello, Sekai!");
 }
 ```
 
@@ -47,14 +47,14 @@ rustc main.rs
 输出：
 
 ```text
-Hello, World!
+Hello, Sekai!
 ```
 
 实际开发中，我们更多使用 Cargo（Rust 的包管理与构建工具）来管理项目：
 
 ```bash
-cargo new hello_world  # 新建项目
-cd hello_world
+cargo new hello_sekai  # 新建项目
+cd hello_sekai
 cargo run              # 编译并运行
 ```
 
