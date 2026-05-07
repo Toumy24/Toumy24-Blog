@@ -1,0 +1,151 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>VexFlow Music Debug</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fafafa;
+        }
+        h1 { color: #333; border-bottom: 3px solid #007bff; padding-bottom: 10px; }
+        h2 { color: #555; margin-top: 30px; }
+        .section { background: white; padding: 20px; margin: 15px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .status { display: flex; gap: 15px; margin: 15px 0; }
+        .status-item { flex: 1; padding: 12px; border-radius: 6px; text-align: center; font-weight: bold; }
+        .status-ok { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status-waiting { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .log-container {
+            background: #1e1e1e; color: #00ff00; padding: 15px; border-radius: 6px;
+            max-height: 350px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 12px;
+        }
+        .log-debug { color: #00aaff; }
+        .log-success { color: #00ff00; }
+        .log-error { color: #ff4444; }
+        .log-warn { color: #ffaa00; }
+        textarea {
+            width: 100%; font-family: monospace; padding: 10px;
+            border: 1px solid #ddd; border-radius: 4px; font-size: 13px; min-height: 120px; resize: vertical;
+        }
+        button {
+            padding: 10px 20px; background: #007bff; color: white; border: none;
+            border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 10px;
+        }
+        button:hover { background: #0056b3; }
+        .render-area {
+            background: #f8f9fa; border: 2px solid #dee2e6; border-radius: 6px;
+            padding: 20px; margin: 15px 0; min-height: 200px;
+            overflow: auto; max-width: 100%;
+        }
+        .render-area svg { max-width: 100%; height: auto; }
+    </style>
+</head>
+<body>
+    <h1>VexFlow Music Notation -- Debug</h1>
+    <p>独立测试页面：验证 Parser 解析与 VexFlow 渲染。</p>
+
+    <div class="section">
+        <h2>Status</h2>
+        <div class="status">
+            <div class="status-item status-waiting" id="st-vf"><small>VexFlow</small><div id="st-vf-i">...</div></div>
+            <div class="status-item status-waiting" id="st-ps"><small>Parser</small><div id="st-ps-i">...</div></div>
+            <div class="status-item status-waiting" id="st-all"><small>Overall</small><div id="st-all-i">...</div></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Log</h2>
+        <div class="log-container" id="log"></div>
+    </div>
+
+    <div class="section">
+        <h2>Input</h2>
+        <textarea id="input">title: Twinkle Twinkle Little Star
+key: C
+time: 4/4
+clef: treble
+C4/4 C4/4 G4/4 G4/4 | A4/4 A4/4 G4/2 | F4/4 F4/4 E4/4 E4/4 | D4/4 D4/4 C4/2</textarea>
+        <br>
+        <button onclick="doRender()">Parse &amp; Render</button>
+    </div>
+
+    <div class="section">
+        <h2>Output</h2>
+        <div class="render-area" id="output">
+            <p style="color:#999;text-align:center;margin-top:40px">Render result will appear here</p>
+        </div>
+    </div>
+
+    <!-- VexFlow CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/vexflow@4/build/cjs/vexflow.js"></script>
+
+    <script type="module">
+        /**
+         * Debug page -- 使用与博客完全相同的 engine/renderer 模块
+         * 通过 ES module import 加载，确保测试结果与线上一致
+         */
+        import { createEngine, calcLayout, CONFIG } from '../js/vex-music-engine.js';
+
+        /* ---- Logging ---- */
+        function log(msg, type = 'debug') {
+            const el = document.getElementById('log');
+            const d = document.createElement('div');
+            d.className = 'log-' + type;
+            d.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+            el.appendChild(d);
+            el.scrollTop = el.scrollHeight;
+        }
+
+        function setStatus(id, ok) {
+            const el = document.getElementById(id);
+            el.className = 'status-item ' + (ok ? 'status-ok' : 'status-error');
+            el.querySelector('div').textContent = ok ? 'OK' : 'FAIL';
+        }
+
+        /* ---- Init engine ---- */
+        log('Checking VexFlow...');
+        if (!window.Vex?.Flow) {
+            log('VexFlow not found', 'error');
+            setStatus('st-vf', false);
+        } else {
+            log('VexFlow v' + (window.Vex.Flow.VERSION || '4.x') + ' loaded', 'success');
+            setStatus('st-vf', true);
+        }
+
+        const engine = createEngine('../js/vex-music-parser.js');
+        try {
+            await engine.initialize();
+            log('Parser loaded', 'success');
+            setStatus('st-ps', true);
+            setStatus('st-all', true);
+        } catch (e) {
+            log('Parser init failed: ' + e.message, 'error');
+            setStatus('st-ps', false);
+            setStatus('st-all', false);
+        }
+
+        log('Ready.', 'success');
+
+        /* ---- Render function (exposed to button onclick) ---- */
+        window.doRender = async function () {
+            const output = document.getElementById('output');
+            output.innerHTML = '';
+            const content = document.getElementById('input').value;
+            log('Rendering ' + content.length + ' chars...', 'debug');
+            try {
+                await engine.parseAndRender(content, output);
+                log('Render complete', 'success');
+            } catch (e) {
+                log('Error: ' + e.message, 'error');
+                output.innerHTML = '<p style="color:#c00">' + e.message + '</p>';
+            }
+        };
+    </script>
+</body>
+</html>

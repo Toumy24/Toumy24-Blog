@@ -1,0 +1,113 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>VexFlow Music Debug Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .log { background: #f0f0f0; padding: 10px; margin: 10px 0; border-left: 3px solid #333; }
+        .error { border-left-color: #f00; color: #f00; }
+        .success { border-left-color: #0a0; color: #0a0; }
+        .debug { border-left-color: #00f; color: #00f; }
+        .music-block { border: 2px solid #ccc; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>VexFlow Music Notation Debug Test</h1>
+    
+    <div class="log debug">Status: Loading libraries...</div>
+    
+    <h2>Test 1: Library Loading Check</h2>
+    <div id="lib-check"></div>
+    
+    <h2>Test 2: Music Block Parsing</h2>
+    <div class="music-block">
+        <div class="vex-music-score" data-content="title: 测试
+key: C
+time: 4/4
+C4/4 D#4/4 E4/4 F4/4 | r/4 G4/4 A4/4 B4/4"></div>
+    </div>
+    
+    <h2>Debug Output</h2>
+    <div id="debug-output" style="background: #f9f9f9; padding: 15px; min-height: 200px; border: 1px solid #ddd; overflow-y: auto;"></div>
+    
+    <script>
+        function log(msg, type = 'debug') {
+            const output = document.getElementById('debug-output');
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            output.appendChild(div);
+            console.log(`[${type.toUpperCase()}] ${msg}`);
+        }
+        
+        // Override console.log for vexflow debug
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            if (args[0]?.includes?.('[')) {
+                log(args.join(' '), 'debug');
+            }
+        };
+        
+        log('1. Initial check...', 'debug');
+        log(`window.Vex exists: ${typeof window.Vex}`, 'debug');
+        log(`window.Vex.Flow exists: ${typeof window.Vex?.Flow}`, 'debug');
+    </script>
+    
+    <!-- 重要：vexflow必须在module脚本之前加载，不使用defer -->
+    <script src="https://cdn.jsdelivr.net/npm/vexflow@4/build/cjs/vexflow.js"></script>
+    
+    <script>
+        // 检查vexflow是否成功加载
+        setTimeout(() => {
+            const check = document.getElementById('lib-check');
+            if (window.Vex && window.Vex.Flow) {
+                check.innerHTML = '<div class="log success">✓ Vexflow loaded successfully</div>';
+                log('2. Vexflow loaded!', 'success');
+            } else {
+                check.innerHTML = '<div class="log error">✗ Vexflow failed to load</div>';
+                log('2. ERROR: Vexflow not loaded!', 'error');
+            }
+        }, 100);
+    </script>
+    
+    <!-- Parser和Renderer脚本 -->
+    <script type="module">
+        import { parseMusicBlock } from './vex-music-parser.js';
+        
+        log('3. Parser module imported', 'debug');
+        log(`parseMusicBlock type: ${typeof parseMusicBlock}`, 'debug');
+        
+        async function testParsing() {
+            const testContent = `title: 测试
+key: C
+time: 4/4
+C4/4 D#4/4 E4/4 F4/4 | r/4 G4/4 A4/4 B4/4`;
+            
+            log('4. Testing parser with content:', 'debug');
+            log(`Content:\n${testContent}`, 'debug');
+            
+            try {
+                const result = parseMusicBlock(testContent);
+                log(`Parser result type: ${typeof result}`, 'debug');
+                log(`Parser result: ${JSON.stringify(result)}`, 'debug');
+                
+                if (result.measures && result.measures.length > 0) {
+                    log(`✓ Parsed ${result.measures.length} measures`, 'success');
+                } else {
+                    log('✗ No measures found in result', 'error');
+                }
+            } catch (e) {
+                log(`✗ Parser error: ${e.message}`, 'error');
+            }
+        }
+        
+        // 等待vexflow加载完成再测试
+        setTimeout(testParsing, 500);
+    </script>
+    
+    <!-- Renderer脚本 -->
+    <script type="module" src="./vex-music-renderer.js"></script>
+
+</body>
+</html>
