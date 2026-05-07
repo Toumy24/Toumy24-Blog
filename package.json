@@ -15,7 +15,7 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "build": "hugo",
+    "build": "hugo --buildFuture",
     "test": "echo \"Error: no test specified\" && exit 1",
     "algolia": "atomic-algolia",
     "postbuild": "npm run algolia"
