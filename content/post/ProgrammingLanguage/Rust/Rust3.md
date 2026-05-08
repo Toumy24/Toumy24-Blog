@@ -1,4 +1,4 @@
-﻿---
+﻿﻿﻿﻿---
 title: "通用语言教程-Rust 篇【3】所有权与借用"
 date: 2026-05-07T11:00:00+08:00
 timezone: UTC+8
@@ -36,10 +36,10 @@ Rust 的所有权系统建立在三条规则上：
 fn main() {
     {
         let s = String::from("hello"); // s 是这块字符串数据的所有者
-        println!("{}", s);             // 可以使用 s
+        println!("{s}");             // 可以使用 s
     }                                  // s 的作用域结束，Rust 自动调用 drop，释放堆内存
 
-    // println!("{}", s); // 这里 s 已经不存在了，编译报错
+    // println!("{s}"); // 这里 s 已经不存在了，编译报错
 }
 ```
 
@@ -60,8 +60,8 @@ fn main() {
     let s1 = String::from("hello");
     let s2 = s1; // s1 的所有权移动到 s2，s1 失效
 
-    // println!("{}", s1); // 编译错误：value borrowed here after move
-    println!("{}", s2); // 正常
+    // println!("{s1}"); // 编译错误：value borrowed here after move
+    println!("{s2}"); // 正常
 }
 ```
 
@@ -75,7 +75,7 @@ fn main() {
 fn main() {
     let x = 5;
     let y = x; // i32 被复制，x 和 y 各自独立
-    println!("{} {}", x, y); // 两者都有效
+    println!("{x} {y}"); // 两者都有效
 }
 ```
 
@@ -92,7 +92,7 @@ fn main() {
     let s1 = String::from("hello");
     let s2 = s1.clone(); // 堆上的数据也被完整复制了一份
 
-    println!("{} {}", s1, s2); // 两者都有效，各自独立
+    println!("{s1} {s2}"); // 两者都有效，各自独立
 }
 ```
 
@@ -104,14 +104,14 @@ fn main() {
 
 ```rust
 fn consume(s: String) {
-    println!("{}", s);
+    println!("{s}");
 }   // s 离开作用域，drop 被调用，堆内存释放
 
 fn main() {
     let s = String::from("hello");
     consume(s);              // s 的所有权移入函数
 
-    // println!("{}", s);   // 编译错误：s 已被移走
+    // println!("{s}");   // 编译错误：s 已被移走
 }
 ```
 
@@ -145,7 +145,7 @@ fn length(s: &String) -> usize {
 fn main() {
     let s = String::from("hello");
     let len = length(&s);           // 传入引用，s 的所有权不转移
-    println!("'{}' 长度是 {}", s, len); // s 仍然有效
+    println!("'{s}' 长度是 {len}"); // s 仍然有效
 }
 ```
 
@@ -159,7 +159,7 @@ fn append(s: &mut String) {
 fn main() {
     let mut s = String::from("hello"); // 变量本身也必须是 mut
     append(&mut s);
-    println!("{}", s); // hello, sekai
+    println!("{s}"); // hello, sekai
 }
 ```
 
@@ -177,12 +177,12 @@ fn main() {
 
     let r1 = &s; // 不可变引用 1
     let r2 = &s; // 不可变引用 2，没问题
-    println!("{} {}", r1, r2);
+    println!("{r1} {r2}");
     // r1 和 r2 的最后一次使用在这里，之后它们就"不存在"了
 
     let r3 = &mut s; // 可变引用，此时 r1 r2 已经不再使用，可以
     r3.push_str("!");
-    println!("{}", r3);
+    println!("{r3}");
 }
 ```
 
@@ -237,7 +237,7 @@ fn main() {
     let hello = &s[0..5];  // 字节索引 [0, 5)，即 "hello"
     let sekai = &s[6..11]; // 即 "sekai"
 
-    println!("{} {}", hello, sekai);
+    println!("{hello} {sekai}");
 
     // 简写形式
     let all  = &s[..];    // 整个字符串
@@ -284,7 +284,7 @@ fn main() {
     // 如果在这里修改 s，编译器会报错，因为 word 还持有对 s 的不可变引用
     // s.clear(); // 编译错误
 
-    println!("第一个词: {}", word);
+    println!("第一个词: {word}");
 }
 ```
 
@@ -296,6 +296,6 @@ fn main() {
 fn main() {
     let arr = [1, 2, 3, 4, 5];
     let slice: &[i32] = &arr[1..4]; // [2, 3, 4]
-    println!("{:?}", slice);
+    println!("{slice:?}");
 }
 ```

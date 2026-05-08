@@ -47,7 +47,7 @@ mod greetings {
 
     pub mod formal {
         pub fn greet(name: &str) {
-            println!("Good day, {}", name);
+            println!("Good day, {name}");
         }
     }
 }
@@ -236,7 +236,7 @@ fn main() {
 
 ```rust
 fn print(s: &str) {
-    println!("{}", s);
+    println!("{s}");
 }
 
 fn main() {
@@ -260,7 +260,7 @@ fn main() {
     let clone2 = Rc::clone(&shared);
 
     println!("引用计数: {}", Rc::strong_count(&shared)); // 3
-    println!("{:?}", clone1);
+    println!("{clone1:?}");
 
     drop(clone1);
     println!("引用计数: {}", Rc::strong_count(&shared)); // 2
@@ -288,7 +288,7 @@ fn main() {
     } // 可变借用在这里释放
 
     let d = data.borrow(); // 不可变借用，此时没有可变借用存在，允许
-    println!("{:?}", d);
+    println!("{d:?}");
 }
 ```
 

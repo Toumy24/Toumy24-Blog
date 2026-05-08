@@ -83,7 +83,7 @@ use std::io;
 
 fn main() -> Result<(), io::Error> {
     let content = fs::read_to_string("hello.txt")?;
-    println!("{}", content);
+    println!("{content}");
     Ok(())
 }
 ```
@@ -192,7 +192,7 @@ fn main() {
         let x = 5;
         result = &x; // 编译错误：x 在内层块结束时被 drop，result 成为悬垂引用
     }
-    println!("{}", result);
+    println!("{result}");
 }
 ```
 
@@ -241,9 +241,9 @@ fn main() {
     {
         let s2 = String::from("xy");
         result = longest(s1.as_str(), s2.as_str());
-        println!("{}", result); // 在 s2 有效的范围内使用，没问题
+        println!("{result}"); // 在 s2 有效的范围内使用，没问题
     }
-    // println!("{}", result); // 这里 s2 已经不存在了，如果 result 指向 s2 会出错
+    // println!("{result}"); // 这里 s2 已经不存在了，如果 result 指向 s2 会出错
     // 编译器通过生命周期标注发现这种使用不安全，会报错
 }
 ```
@@ -277,7 +277,7 @@ struct Important<'a> {
 
 impl<'a> Important<'a> {
     fn announce(&self, msg: &str) -> &str { // 规则三：返回值生命周期 = self
-        println!("{}", msg);
+        println!("{msg}");
         self.content
     }
 }

@@ -1,4 +1,4 @@
-﻿---
+﻿﻿---
 title: "通用语言教程-Rust 篇【10】迭代器"
 date: 2026-05-08T09:00:00+08:00
 timezone: UTC+8
@@ -56,9 +56,9 @@ fn main() {
     // v 的所有权不变，循环后 v 仍然可用
     for x in v.iter() {
         // x 类型是 &i32
-        println!("{}", x);
+        println!("{x}");
     }
-    println!("v 还在: {:?}", v); // 可以继续用 v
+    println!("v 还在: {v:?}"); // 可以继续用 v
 
     // iter_mut()：产生可变引用 &mut T
     // 可以在遍历中修改元素
@@ -66,16 +66,16 @@ fn main() {
     for x in v2.iter_mut() {
         *x *= 10; // 通过可变引用修改，需要 * 解引用
     }
-    println!("{:?}", v2); // [10, 20, 30]
+    println!("{v2:?}"); // [10, 20, 30]
 
     // into_iter()：消耗集合本身，产生 T（元素的值，不是引用）
     // 循环后 v3 的所有权被转移，不可再用
     let v3 = vec![String::from("a"), String::from("b")];
     for s in v3.into_iter() {
         // s 类型是 String，不是引用，拥有所有权
-        println!("{}", s);
+        println!("{s}");
     }
-    // println!("{:?}", v3); // 编译错误：v3 已被消耗
+    // println!("{v3:?}"); // 编译错误：v3 已被消耗
 }
 ```
 
@@ -91,7 +91,7 @@ fn main() {
 
     // 这行不会做任何事！map 只是创建了一个"等待执行的计划"
     let _mapped = v.iter().map(|x| {
-        println!("处理 {}", x); // 这行现在不会执行
+        println!("处理 {x}"); // 这行现在不会执行
         x * 2
     });
 
@@ -99,7 +99,7 @@ fn main() {
 
     // 当调用消费者方法（collect/sum/for_each 等）时才真正执行
     let result: Vec<i32> = v.iter().map(|x| x * 2).collect();
-    println!("{:?}", result); // [2, 4, 6, 8, 10]，现在才执行
+    println!("{result:?}"); // [2, 4, 6, 8, 10]，现在才执行
 }
 ```
 
@@ -117,11 +117,11 @@ fn main() {
 
     // 每个元素乘以 2
     let doubled: Vec<i32> = v.iter().map(|&x| x * 2).collect();
-    println!("{:?}", doubled); // [2, 4, 6, 8, 10]
+    println!("{doubled:?}"); // [2, 4, 6, 8, 10]
 
     // 把数字转成字符串
     let strings: Vec<String> = v.iter().map(|x| x.to_string()).collect();
-    println!("{:?}", strings); // ["1", "2", "3", "4", "5"]
+    println!("{strings:?}"); // ["1", "2", "3", "4", "5"]
 }
 ```
 
@@ -133,13 +133,13 @@ fn main() {
 
     // 只保留偶数
     let evens: Vec<&i32> = v.iter().filter(|&&x| x % 2 == 0).collect();
-    println!("{:?}", evens); // [2, 4, 6, 8]
+    println!("{evens:?}"); // [2, 4, 6, 8]
 
     // filter 闭包接收 &&T（两层引用）：外层是 iter() 给的 &T，filter 再借用一次变成 &&T
     // 写 &&x 在模式里解引用两层，得到 i32 的值
     // 或者也可以写成：
     let evens2: Vec<i32> = v.iter().filter(|x| *x % 2 == 0).cloned().collect();
-    println!("{:?}", evens2); // [2, 4, 6, 8]
+    println!("{evens2:?}"); // [2, 4, 6, 8]
 }
 ```
 
@@ -156,7 +156,7 @@ fn main() {
         .iter()
         .filter_map(|s| s.parse::<i32>().ok()) // parse 失败返回 None，filter_map 自动跳过
         .collect();
-    println!("{:?}", numbers); // [1, 2, 4, 6]
+    println!("{numbers:?}"); // [1, 2, 4, 6]
 }
 ```
 
@@ -168,19 +168,19 @@ fn main() {
 
     // take(n)：只取前 n 个
     let first3: Vec<&i32> = v.iter().take(3).collect();
-    println!("{:?}", first3); // [1, 2, 3]
+    println!("{first3:?}"); // [1, 2, 3]
 
     // skip(n)：跳过前 n 个
     let after3: Vec<&i32> = v.iter().skip(3).collect();
-    println!("{:?}", after3); // [4, 5, 6, 7, 8, 9, 10]
+    println!("{after3:?}"); // [4, 5, 6, 7, 8, 9, 10]
 
     // take_while：取元素直到条件不满足
     let small: Vec<&i32> = v.iter().take_while(|&&x| x < 5).collect();
-    println!("{:?}", small); // [1, 2, 3, 4]
+    println!("{small:?}"); // [1, 2, 3, 4]
 
     // skip_while：跳过元素直到条件不满足，然后取剩余所有
     let rest: Vec<&i32> = v.iter().skip_while(|&&x| x < 5).collect();
-    println!("{:?}", rest); // [5, 6, 7, 8, 9, 10]
+    println!("{rest:?}"); // [5, 6, 7, 8, 9, 10]
 }
 ```
 
@@ -208,7 +208,7 @@ fn main() {
     // 长度取两者中较短的那个
     let combined: Vec<_> = names.iter().zip(scores.iter()).collect();
     for (name, score) in &combined {
-        println!("{}: {}", name, score);
+        println!("{name}: {score}");
     }
 }
 ```
@@ -221,7 +221,7 @@ fn main() {
     let b = vec![4, 5, 6];
 
     let combined: Vec<_> = a.iter().chain(b.iter()).collect();
-    println!("{:?}", combined); // [1, 2, 3, 4, 5, 6]
+    println!("{combined:?}"); // [1, 2, 3, 4, 5, 6]
 }
 ```
 
@@ -237,7 +237,7 @@ fn main() {
     let all_words: Vec<&str> = words.iter()
         .flat_map(|s| s.split_whitespace())
         .collect();
-    println!("{:?}", all_words); // ["hello", "world", "foo", "bar", "baz"]
+    println!("{all_words:?}"); // ["hello", "world", "foo", "bar", "baz"]
 }
 ```
 
@@ -279,17 +279,17 @@ fn main() {
     // 收集成 HashSet（自动去重）
     let with_dups = vec![1, 2, 2, 3, 3, 3];
     let unique: HashSet<i32> = with_dups.iter().copied().collect();
-    println!("{:?}", unique); // {1, 2, 3}（顺序不定）
+    println!("{unique:?}"); // {1, 2, 3}（顺序不定）
 
     // 收集 (key, value) 元组成 HashMap
     let pairs = vec![("one", 1), ("two", 2), ("three", 3)];
     let map: HashMap<_, _> = pairs.into_iter().collect();
-    println!("{:?}", map);
+    println!("{map:?}");
 
     // 收集 Result<T, E> 成 Result<Vec<T>, E>（任意一个 Err 就整体失败）
     let strings = vec!["1", "2", "3"];
     let numbers: Result<Vec<i32>, _> = strings.iter().map(|s| s.parse::<i32>()).collect();
-    println!("{:?}", numbers); // Ok([1, 2, 3])
+    println!("{numbers:?}"); // Ok([1, 2, 3])
 }
 ```
 
@@ -300,10 +300,10 @@ fn main() {
     let v = vec![1, 2, 3, 4, 5];
 
     let sum: i32 = v.iter().sum();
-    println!("{}", sum); // 15
+    println!("{sum}"); // 15
 
     let product: i32 = v.iter().product();
-    println!("{}", product); // 120（1×2×3×4×5）
+    println!("{product}"); // 120（1×2×3×4×5）
 }
 ```
 
@@ -317,11 +317,11 @@ fn main() {
 
     // 用 fold 模拟 sum
     let sum = v.iter().fold(0, |acc, &x| acc + x);
-    println!("{}", sum); // 15
+    println!("{sum}"); // 15
 
     // 用 fold 找最大值
     let max = v.iter().fold(i32::MIN, |acc, &x| acc.max(x));
-    println!("{}", max); // 5
+    println!("{max}"); // 5
 
     // 用 fold 拼接字符串
     let words = vec!["hello", "world", "sekai"];
@@ -330,7 +330,7 @@ fn main() {
         acc.push_str(w);
         acc
     });
-    println!("{}", sentence); // hello world sekai
+    println!("{sentence}"); // hello world sekai
 }
 ```
 
@@ -341,11 +341,11 @@ fn main() {
     let v = vec![1, 2, 3, 4, 5, 6];
 
     let total = v.iter().count();
-    println!("{}", total); // 6
+    println!("{total}"); // 6
 
     // 计满足条件的元素个数
     let even_count = v.iter().filter(|&&x| x % 2 == 0).count();
-    println!("{}", even_count); // 3
+    println!("{even_count}"); // 3
 }
 ```
 
@@ -375,11 +375,11 @@ fn main() {
 
     // find：返回第一个满足条件的元素的引用（Option<&T>）
     let found = v.iter().find(|&&x| x > 4);
-    println!("{:?}", found); // Some(5)
+    println!("{found:?}"); // Some(5)
 
     // position：返回第一个满足条件的元素的下标（Option<usize>）
     let pos = v.iter().position(|&x| x > 4);
-    println!("{:?}", pos); // Some(1)（5 在下标 1）
+    println!("{pos:?}"); // Some(1)（5 在下标 1）
 
     // 找最大最小值
     println!("{:?}", v.iter().min()); // Some(1)
@@ -396,7 +396,7 @@ fn main() {
     // for_each 和 for 循环等价，但可以接在链式调用末尾
     v.iter()
         .filter(|&&x| x % 2 == 0)
-        .for_each(|x| println!("偶数：{}", x));
+        .for_each(|x| println!("偶数：{x}"));
 }
 ```
 
@@ -423,7 +423,7 @@ fn main() {
         .take(3)
         .map(|(name, _)| *name)
         .collect();
-    println!("{:?}", top_names); // ["Diana", "Bob", "Alice"]
+    println!("{top_names:?}"); // ["Diana", "Bob", "Alice"]
 
     // 计算平均成绩
     let avg = data.iter().map(|(_, s)| s).sum::<i32>() as f64 / data.len() as f64;
@@ -462,15 +462,15 @@ impl Iterator for Fibonacci {
 fn main() {
     // take(10) 限制只取前 10 个，否则会无限循环
     let first_10: Vec<u64> = Fibonacci::new().take(10).collect();
-    println!("{:?}", first_10); // [1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
+    println!("{first_10:?}"); // [1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
 
     // 求前 10 个斐波那契数之和
     let sum: u64 = Fibonacci::new().take(10).sum();
-    println!("sum={}", sum); // 143
+    println!("sum={sum}"); // 143
 
     // 第一个大于 100 的斐波那契数
     let big = Fibonacci::new().find(|&x| x > 100);
-    println!("{:?}", big); // Some(144)
+    println!("{big:?}"); // Some(144)
 }
 ```
 
@@ -486,26 +486,26 @@ use std::iter;
 fn main() {
     // once(x)：只产生一个值的迭代器
     let one: Vec<i32> = iter::once(42).collect();
-    println!("{:?}", one); // [42]
+    println!("{one:?}"); // [42]
 
     // repeat(x)：无限重复同一个值，需要配合 take
     let fives: Vec<i32> = iter::repeat(5).take(4).collect();
-    println!("{:?}", fives); // [5, 5, 5, 5]
+    println!("{fives:?}"); // [5, 5, 5, 5]
 
     // repeat_with(f)：每次调用闭包产生一个值（闭包可以有状态）
     let mut counter = 0;
     let counts: Vec<i32> = iter::repeat_with(|| { counter += 1; counter }).take(5).collect();
-    println!("{:?}", counts); // [1, 2, 3, 4, 5]
+    println!("{counts:?}"); // [1, 2, 3, 4, 5]
 
     // empty()：空迭代器（产生 0 个值）
     let empty: Vec<i32> = iter::empty().collect();
-    println!("{:?}", empty); // []
+    println!("{empty:?}"); // []
 
     // successors(初始值, |上一个值| -> Option<下一个值>)
     // 从初始值开始，每次根据上一个值计算下一个，返回 None 时停止
     let powers_of_2: Vec<u32> = iter::successors(Some(1u32), |&n| {
         if n < 1000 { Some(n * 2) } else { None }
     }).collect();
-    println!("{:?}", powers_of_2); // [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
+    println!("{powers_of_2:?}"); // [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
 }
 ```

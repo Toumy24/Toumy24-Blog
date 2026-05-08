@@ -1,4 +1,4 @@
-﻿---
+﻿﻿﻿---
 title: "通用语言教程-Rust 篇【4】函数、闭包与自定义类型"
 date: 2026-05-07T12:00:00+08:00
 timezone: UTC+8
@@ -74,13 +74,13 @@ fn main() {
     let n = 42;
 
     let description = if n > 0 { "positive" } else { "non-positive" };
-    println!("{}", description);
+    println!("{description}");
 
     let y = {
         let x = 3;
         x * x + 1 // 没有分号，这是块的值
     };
-    println!("{}", y); // 10
+    println!("{y}"); // 10
 }
 ```
 
@@ -102,7 +102,7 @@ fn min_max(v: &[i32]) -> (i32, i32) {
 fn main() {
     let nums = [3, 1, 4, 1, 5, 9, 2, 6];
     let (min, max) = min_max(&nums); // 解构赋值
-    println!("min={}, max={}", min, max);
+    println!("min={min}, max={max}");
 }
 ```
 
@@ -151,8 +151,8 @@ fn call_twice<F: Fn()>(f: F) {
 
 fn main() {
     let msg = String::from("hello");
-    call_twice(|| println!("{}", msg)); // 不可变借用 msg
-    println!("{}", msg); // msg 仍然有效
+    call_twice(|| println!("{msg}")); // 不可变借用 msg
+    println!("{msg}"); // msg 仍然有效
 }
 ```
 
@@ -163,7 +163,7 @@ fn main() {
     let mut count = 0;
     let mut increment = || {
         count += 1;
-        println!("count: {}", count);
+        println!("count: {count}");
     };
     increment();
     increment();
@@ -181,7 +181,7 @@ fn consume<F: FnOnce()>(f: F) {
 fn main() {
     let s = String::from("hello");
     consume(|| {
-        println!("{}", s);
+        println!("{s}");
         drop(s); // 这里消耗了 s，所以这是 FnOnce
     });
 }
@@ -196,9 +196,9 @@ fn main() {
 ```rust
 fn main() {
     let s = String::from("hello");
-    let owned_closure = move || println!("{}", s); // s 的所有权移入闭包
+    let owned_closure = move || println!("{s}"); // s 的所有权移入闭包
 
-    // println!("{}", s); // 编译错误：s 已被移走
+    // println!("{s}"); // 编译错误：s 已被移走
     owned_closure();
 }
 ```
@@ -441,13 +441,13 @@ fn divide(a: f64, b: f64) -> Option<f64> {
 
 fn main() {
     match divide(10.0, 2.0) {
-        Some(result) => println!("结果: {}", result),
+        Some(result) => println!("结果: {result}"),
         None         => println!("除数不能为零"),
     }
 
     // 或者用更简洁的 if let
     if let Some(result) = divide(10.0, 0.0) {
-        println!("结果: {}", result);
+        println!("结果: {result}");
     } else {
         println!("除数不能为零");
     }
@@ -469,7 +469,7 @@ fn main() {
 
     // map：有值时转换，None 原样传递
     let doubled = a.map(|x| x * 2); // Some(10)
-    println!("{:?}", doubled);
+    println!("{doubled:?}");
 
     // unwrap：有值返回值，None 时 panic（只在确定有值时用）
     println!("{}", a.unwrap()); // 5
@@ -502,8 +502,8 @@ fn read_file_content(path: &str) -> Result<String, io::Error> {
 
 fn main() {
     match read_file_content("config.txt") {
-        Ok(content) => println!("文件内容: {}", content),
-        Err(e)      => println!("读取失败: {}", e),
+        Ok(content) => println!("文件内容: {content}"),
+        Err(e)      => println!("读取失败: {e}"),
     }
 }
 ```
@@ -519,7 +519,7 @@ fn main() {
 
     // map：Ok 时转换值
     let doubled = result.map(|x| x * 2);
-    println!("{:?}", doubled); // Ok(84)
+    println!("{doubled:?}"); // Ok(84)
 
     // unwrap/expect：Ok 返回值，Err 时 panic
     // expect 可以提供更有意义的 panic 信息
@@ -538,7 +538,7 @@ use std::io;
 fn process() -> Result<(), io::Error> {
     let content = fs::read_to_string("a.txt")?; // 失败则提前返回 Err
     let second  = fs::read_to_string("b.txt")?;
-    println!("{} {}", content, second);
+    println!("{content} {second}");
     Ok(())
 }
 ```

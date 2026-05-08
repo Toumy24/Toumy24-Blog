@@ -96,7 +96,7 @@ use rand::Rng; // 把 rand::Rng 这个 trait 引入当前作用域
 fn main() {
     let mut rng = rand::thread_rng();
     let n: i32 = rng.gen_range(1..=100); // 生成 1 到 100 之间的随机整数
-    println!("随机数: {}", n);
+    println!("随机数: {n}");
 }
 ```
 
@@ -185,30 +185,33 @@ fn main() {
 
 ## 格式化字符串
 
-格式字符串中的 `{}` 是占位符，运行时会被替换成对应参数的值。
+格式字符串中的 `{}` 是占位符，运行时会被替换成对应参数的值。Rust 有两种写法：
 
 ```rust
 fn main() {
     let name = "Sekai";
     let score = 95;
 
+    // 旧写法：占位符和变量名分开，变量名跟在格式字符串后面
     println!("姓名：{}，成绩：{}", name, score);
 
-    // Rust 1.58 起支持直接在花括号里写变量名
+    // 新写法（Rust 1.58 起）：直接把变量名写进占位符里，更直观
     println!("姓名：{name}，成绩：{score}");
 
-    // 按索引引用参数（索引从 0 开始，同一个参数可以引用多次）
+    // 按索引引用参数（字面量没有名字，只能用索引写法，索引从 0 开始）
     println!("{0} 和 {1}，以及再次出现的 {0}", "第一", "第二");
 }
 ```
+
+> **本教程约定**：从这里起，所有代码示例统一使用 `{变量名}` 的新写法。这是现代 Rust 代码里的推荐风格，代码更简洁，变量和占位符的对应关系一目了然。
 
 `{}` 调用的是这个值的 `Display` trait，也就是"给人看的格式"。另一个常用的是 `{:?}`，调用 `Debug` trait，输出更接近代码表示，常用于调试：
 
 ```rust
 fn main() {
     let v = vec![1, 2, 3];
-    println!("{:?}", v);   // [1, 2, 3]
-    println!("{:#?}", v);  // 每个元素单独一行，更易读
+    println!("{v:?}");   // [1, 2, 3]
+    println!("{v:#?}");  // 每个元素单独一行，更易读
 }
 ```
 
@@ -252,7 +255,7 @@ fn main() {
     let z = true;    // 推断为 bool
     let s = "hello"; // 推断为 &str
 
-    println!("{} {} {} {}", x, y, z, s);
+    println!("{x} {y} {z} {s}");
 }
 ```
 
@@ -289,9 +292,9 @@ fn main() {
 ```rust
 fn main() {
     let mut x = 5;
-    println!("{}", x); // 5
+    println!("{x}"); // 5
     x = 10;
-    println!("{}", x); // 10
+    println!("{x}"); // 10
 }
 ```
 
@@ -307,12 +310,12 @@ fn main() {
     let x = x + 1;    // 新的 x 遮蔽了旧的 x，值为 6
     let x = x * 2;    // 再次遮蔽，值为 12
 
-    println!("{}", x); // 12
+    println!("{x}"); // 12
 
     // 遮蔽可以改变类型，这是 mut 做不到的
     let spaces = "   ";     // &str 类型
     let spaces = spaces.len(); // usize 类型，遮蔽了前面的 spaces
-    println!("{}", spaces); // 3
+    println!("{spaces}"); // 3
 }
 ```
 
@@ -329,7 +332,7 @@ const MAX_SCORE: u32 = 100;
 const PI: f64 = 3.141_592_653;
 
 fn main() {
-    println!("最高分: {}", MAX_SCORE);
+    println!("最高分: {MAX_SCORE}");
 }
 ```
 
@@ -341,7 +344,7 @@ fn main() {
 static GREETING: &str = "你好";
 
 fn main() {
-    println!("{}", GREETING);
+    println!("{GREETING}");
 }
 ```
 
@@ -450,7 +453,7 @@ fn main() {
     let chinese = '中';
     let emoji = '😀';
 
-    println!("{} {} {}", c, chinese, emoji);
+    println!("{c} {chinese} {emoji}");
     println!("char 占 {} 字节", std::mem::size_of::<char>()); // 4
 }
 ```
@@ -477,7 +480,7 @@ fn main() {
     let z = x as u8;     // i32 → u8，可能截断：1000 % 256 = 232
     let f = x as f64;    // i32 → f64
 
-    println!("{} {} {}", y, z, f); // 1000 232 1000
+    println!("{y} {z} {f}"); // 1000 232 1000
 }
 ```
 
@@ -522,7 +525,7 @@ fn main() {
     x *= 2;  // x = 16
     x /= 4;  // x = 4
     x %= 3;  // x = 1
-    println!("{}", x); // 1
+    println!("{x}"); // 1
 }
 ```
 
@@ -553,7 +556,7 @@ fn main() {
 
     // 比较结果可以直接赋值给 bool 变量
     let is_adult = 18 <= 20; // true
-    println!("{}", is_adult);
+    println!("{is_adult}");
 }
 ```
 
@@ -579,7 +582,7 @@ fn main() {
     // 常见用法：在 if 条件里组合多个条件
     let x = 5;
     if x > 0 && x < 10 {
-        println!("{} 在 1 到 9 之间", x);
+        println!("{x} 在 1 到 9 之间");
     }
 
     let name = "admin";
@@ -680,7 +683,7 @@ fn main() {
     // read_line 读到的内容末尾带有换行符 \n（Windows 上是 \r\n），
     // trim() 去掉首尾空白字符（包括换行符）
     let trimmed = input.trim();
-    println!("你输入的是：{}", trimmed);
+    println!("你输入的是：{trimmed}");
 }
 ```
 

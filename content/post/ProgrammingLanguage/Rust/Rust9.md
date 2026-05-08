@@ -47,13 +47,13 @@ use std::time::Duration;
 fn main() {
     let handle = thread::spawn(|| {
         for i in 1..=5 {
-            println!("子线程: {}", i);
+            println!("子线程: {i}");
             thread::sleep(Duration::from_millis(50));
         }
     });
 
     for i in 1..=3 {
-        println!("主线程: {}", i);
+        println!("主线程: {i}");
         thread::sleep(Duration::from_millis(80));
     }
 
@@ -74,10 +74,10 @@ fn main() {
     let data = vec![1, 2, 3];
 
     let handle = thread::spawn(move || { // 没有 move 会编译错误
-        println!("{:?}", data);
+        println!("{data:?}");
     });
 
-    // println!("{:?}", data); // data 的所有权已转移进线程，这里不能用了
+    // println!("{data:?}"); // data 的所有权已转移进线程，这里不能用了
 
     handle.join().unwrap();
 }
@@ -125,7 +125,7 @@ fn main() {
     });
 
     for received in rx { // rx 作为迭代器使用：接收直到 tx 关闭
-        println!("收到: {}", received);
+        println!("收到: {received}");
     }
 }
 ```
@@ -150,7 +150,7 @@ fn main() {
     // 注意：必须在所有 tx 都 drop 后，rx 的循环才会结束
     // 原始的 tx 已经 move 进线程，tx2 也是，主线程没有剩余 tx，所以 rx 会正确关闭
     for msg in rx {
-        println!("{}", msg);
+        println!("{msg}");
     }
 }
 ```
@@ -272,7 +272,7 @@ async fn fetch_data(url: &str) -> String {
 
 async fn process() {
     let result = fetch_data("https://example.com").await;
-    println!("{}", result);
+    println!("{result}");
 }
 ```
 
@@ -291,7 +291,7 @@ tokio = { version = "1", features = ["full"] }
 #[tokio::main] // 这个宏把 main 函数变成异步入口，设置 tokio 执行器
 async fn main() {
     let result = fetch_something().await;
-    println!("{}", result);
+    println!("{result}");
 }
 
 async fn fetch_something() -> String {
@@ -332,8 +332,8 @@ async fn main() {
 
     // 并发：总耗时约 200ms（最慢的那个）
     let (a, b) = tokio::join!(task("A", 100), task("B", 200));
-    println!("{}", a);
-    println!("{}", b);
+    println!("{a}");
+    println!("{b}");
 }
 ```
 
@@ -349,7 +349,7 @@ async fn main() {
     task("foreground", 50).await; // 和后台任务同时运行
 
     let result = handle.await.unwrap(); // 等待后台任务完成
-    println!("{}", result);
+    println!("{result}");
 }
 ```
 

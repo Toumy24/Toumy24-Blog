@@ -1,4 +1,4 @@
-﻿---
+﻿﻿﻿﻿﻿---
 title: "通用语言教程-Rust 篇【2】控制流"
 date: 2026-05-07T10:00:00+08:00
 timezone: UTC+8
@@ -56,7 +56,7 @@ Rust 里的 `if` 不只是一条语句，它是一个**表达式**，整体可�
 fn main() {
     let x = 10;
     let label = if x > 5 { "大" } else { "小" };
-    println!("{}", label);
+    println!("{label}");
 }
 ```
 
@@ -93,9 +93,9 @@ fn main() {
         if count == 5 {
             break;
         }
-        println!("count = {}", count);
+        println!("count = {count}");
     }
-    println!("结束，count = {}", count);
+    println!("结束，count = {count}");
 }
 ```
 
@@ -110,7 +110,7 @@ fn main() {
             break attempts * 10; // loop 表达式的值是 30
         }
     };
-    println!("result = {}", result); // 30
+    println!("result = {result}"); // 30
 }
 ```
 
@@ -134,7 +134,7 @@ fn main() {
     while n < 100 {
         n *= 2;
     }
-    println!("第一个不小于 100 的 2 的幂次：{}", n); // 128
+    println!("第一个不小于 100 的 2 的幂次：{n}"); // 128
 }
 ```
 
@@ -161,7 +161,7 @@ fn main() {
     let mut x = 0;
     loop {
         x += 1;
-        println!("执行了一次，x = {}", x);
+        println!("执行了一次，x = {x}");
         if x >= 3 { break; }
     }
 }
@@ -184,7 +184,7 @@ for 变量 in 迭代器 {
 fn main() {
     let fruits = ["苹果", "香蕉", "橙子"];
     for fruit in fruits {
-        println!("{}", fruit);
+        println!("{fruit}");
     }
 }
 ```
@@ -222,7 +222,7 @@ fn main() {
 fn main() {
     let colors = ["红", "绿", "蓝"];
     for (i, color) in colors.iter().enumerate() {
-        println!("第 {} 个颜色是 {}", i, color);
+        println!("第 {i} 个颜色是 {color}");
     }
 }
 ```
@@ -236,20 +236,20 @@ fn main() {
     let v = vec![1, 2, 3];
 
     // 写法一：直接遍历，v 的所有权被消耗，循环后 v 不可用
-    // for x in v { println!("{}", x); }
+    // for x in v { println!("{x}"); }
 
     // 写法二：遍历不可变引用，v 之后仍然可用
     for x in &v {
-        println!("{}", x); // x 类型是 &i32
+        println!("{x}"); // x 类型是 &i32
     }
-    println!("v 还在: {:?}", v);
+    println!("v 还在: {v:?}");
 
     // 写法三：遍历可变引用，可以修改元素
     let mut v2 = vec![1, 2, 3];
     for x in &mut v2 {
         *x *= 2; // 解引用后修改
     }
-    println!("{:?}", v2); // [2, 4, 6]
+    println!("{v2:?}"); // [2, 4, 6]
 }
 ```
 
@@ -264,7 +264,7 @@ fn main() {
     'outer: for i in 0..5 {
         for j in 0..5 {
             if i + j == 6 {
-                println!("找到: i={}, j={}", i, j);
+                println!("找到: i={i}, j={j}");
                 break 'outer; // 直接退出外层循环
             }
         }
@@ -308,7 +308,7 @@ fn main() {
         6 | 7 => "周末",   // | 表示"或"
         _ => "无效",        // _ 通配符，匹配所有剩余情况
     };
-    println!("{}", name); // 周三
+    println!("{name}"); // 周三
 }
 ```
 
@@ -344,7 +344,7 @@ fn main() {
         60..=74  => "及格",
         _        => "不及格", // 没有这行就报错
     };
-    println!("{}", grade);
+    println!("{grade}");
 }
 ```
 
@@ -358,18 +358,18 @@ fn main() {
     let point = (1, -3);
     match point {
         (0, 0) => println!("原点"),
-        (x, 0) => println!("x 轴上，x = {}", x),
-        (0, y) => println!("y 轴上，y = {}", y),
-        (x, y) => println!("({}, {})", x, y),
+        (x, 0) => println!("x 轴上，x = {x}"),
+        (0, y) => println!("y 轴上，y = {y}"),
+        (x, y) => println!("({x}, {y})"),
     }
 
     // 带 if 守卫（guard）：在模式匹配的基础上附加额外条件
     let num = 7;
     match num {
-        n if n < 0  => println!("负数: {}", n),
+        n if n < 0  => println!("负数: {n}"),
         0           => println!("零"),
-        n if n < 10 => println!("个位数: {}", n),
-        n           => println!("大于等于 10: {}", n),
+        n if n < 10 => println!("个位数: {n}"),
+        n           => println!("大于等于 10: {n}"),
     }
 }
 ```
@@ -386,8 +386,8 @@ enum Message {
 fn process(msg: Message) {
     match msg {
         Message::Quit        => println!("退出"),
-        Message::Move {x, y} => println!("移动到 ({}, {})", x, y),
-        Message::Write(text) => println!("写入: {}", text),
+        Message::Move {x, y} => println!("移动到 ({x}, {y})"),
+        Message::Write(text) => println!("写入: {text}"),
     }
 }
 ```
@@ -404,18 +404,18 @@ fn main() {
 
     // 完整 match，None 分支什么都不做，纯粹为了让编译器满意
     match num {
-        Some(n) => println!("有值: {}", n),
+        Some(n) => println!("有值: {n}"),
         None    => {}
     }
 
     // if let：只处理 Some 的情况，更简洁
     if let Some(n) = num {
-        println!("有值: {}", n);
+        println!("有值: {n}");
     }
 
     // 也可以带 else
     if let Some(n) = num {
-        println!("有值: {}", n);
+        println!("有值: {n}");
     } else {
         println!("没有值");
     }
@@ -434,7 +434,7 @@ fn main() {
 
     // pop() 返回 Option<T>，有元素时 Some，空时 None
     while let Some(top) = stack.pop() {
-        println!("{}", top); // 3 2 1，从末尾弹出
+        println!("{top}"); // 3 2 1，从末尾弹出
     }
 }
 ```

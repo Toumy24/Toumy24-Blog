@@ -174,7 +174,7 @@ fn notify<T: Summary>(item: &T) {
 
 ```rust
 fn notify<T: Summary + std::fmt::Display>(item: &T) {
-    println!("{}", item);
+    println!("{item}");
 }
 ```
 
@@ -267,7 +267,7 @@ struct Point {
 fn main() {
     let p1 = Point { x: 1.0, y: 2.0 };
     let p2 = p1.clone();
-    println!("{:?}", p1);    // Debug 格式
+    println!("{p1:?}");    // Debug 格式
     println!("{}", p1 == p2); // PartialEq 比较，true
 }
 ```
@@ -290,7 +290,7 @@ impl fmt::Display for Matrix {
 
 fn main() {
     let m = Matrix { a: 1.0, b: 2.0, c: 3.0, d: 4.0 };
-    println!("{}", m);
+    println!("{m}");
 }
 ```
 
@@ -316,7 +316,7 @@ fn main() {
     let a = Vec2 { x: 1.0, y: 2.0 };
     let b = Vec2 { x: 3.0, y: 4.0 };
     let c = a + b;
-    println!("{:?}", c); // Vec2 { x: 4.0, y: 6.0 }
+    println!("{c:?}"); // Vec2 { x: 4.0, y: 6.0 }
 }
 ```
 
@@ -351,14 +351,14 @@ impl Iterator for Counter {
 
 fn main() {
     let sum: u32 = Counter::new(5).sum(); // 1+2+3+4+5
-    println!("{}", sum); // 15
+    println!("{sum}"); // 15
 
     // 实现了 Iterator 后，filter/map/zip 等方法全部自动可用
     let result: Vec<u32> = Counter::new(5)
         .zip(Counter::new(5).skip(1))
         .map(|(a, b)| a * b)
         .collect();
-    println!("{:?}", result); // [2, 6, 12, 20]
+    println!("{result:?}"); // [2, 6, 12, 20]
 }
 ```
 

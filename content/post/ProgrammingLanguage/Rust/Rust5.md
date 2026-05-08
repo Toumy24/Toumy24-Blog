@@ -1,4 +1,4 @@
-﻿---
+﻿﻿﻿﻿﻿﻿---
 title: "通用语言教程-Rust 篇【5】常用集合类型"
 date: 2026-05-07T13:00:00+08:00
 timezone: UTC+8
@@ -59,12 +59,12 @@ fn main() {
 
     // 解构赋值，同时绑定两个变量
     let (x, y) = point;
-    println!("x={}, y={}", x, y);
+    println!("x={x}, y={y}");
 
     // 用 _ 忽略不关心的字段
     let t = (1, "hello", true, 3.14);
     let (first, _, _, last) = t; // 只取第一和最后一个字段
-    println!("{} {}", first, last); // 1 3.14
+    println!("{first} {last}"); // 1 3.14
 }
 ```
 
@@ -88,7 +88,7 @@ fn min_max(v: &[i32]) -> (i32, i32) { // 返回类型是 (i32, i32) 元组
 fn main() {
     let nums = [3, 1, 4, 1, 5, 9];
     let (min, max) = min_max(&nums); // 用解构接收两个返回值
-    println!("最小={}, 最大={}", min, max);
+    println!("最小={min}, 最大={max}");
 }
 ```
 
@@ -98,13 +98,13 @@ fn main() {
 
 ```rust
 fn greet(name: &str) { // 没有写 -> 返回类型，等同于 -> ()
-    println!("你好, {}!", name);
+    println!("你好, {name}!");
     // 末尾隐式返回 ()
 }
 
 fn main() {
     let result: () = greet("世界");
-    println!("{:?}", result); // 输出：()
+    println!("{result:?}"); // 输出：()
 }
 ```
 
@@ -138,8 +138,8 @@ fn main() {
 
     let flags = [false; 8]; // 8 个 false
 
-    println!("{:?}", arr);   // [1, 2, 3, 4, 5]
-    println!("{:?}", zeros); // [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    println!("{arr:?}");   // [1, 2, 3, 4, 5]
+    println!("{zeros:?}"); // [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     let _ = (primes, flags); // 消除未使用警告
 }
 ```
@@ -202,13 +202,13 @@ fn main() {
 
     // 通过下标直接赋值
     arr[2] = 99;
-    println!("{:?}", arr); // [1, 2, 99, 4, 5]
+    println!("{arr:?}"); // [1, 2, 99, 4, 5]
 
     // 遍历可变引用，用 * 解引用后修改（& 号前面加 mut）
     for x in &mut arr {
         *x *= 2; // *x 表示"x 这个引用所指向的值"
     }
-    println!("{:?}", arr); // [2, 4, 198, 8, 10]
+    println!("{arr:?}"); // [2, 4, 198, 8, 10]
 }
 ```
 
@@ -221,7 +221,7 @@ fn main() {
     let arr = [1, 2, 3, 4, 5];
 
     let slice = &arr[1..4]; // 取下标 1、2、3（左闭右开），得到 [2, 3, 4]
-    println!("{:?}", slice);  // [2, 3, 4]
+    println!("{slice:?}");  // [2, 3, 4]
     println!("{}", slice[0]); // 2
     println!("{}", slice.len()); // 3
 }
@@ -232,7 +232,7 @@ fn main() {
 ```rust
 fn print_sum(values: &[i32]) { // &[i32] 接受任意长度
     let sum: i32 = values.iter().sum();
-    println!("sum = {}", sum);
+    println!("sum = {sum}");
 }
 
 fn main() {
@@ -280,29 +280,29 @@ fn main() {
     let mut arr = [3, 1, 4, 1, 5, 9, 2, 6];
 
     arr.sort();                           // 就地排序（从小到大）
-    println!("{:?}", arr); // [1, 1, 2, 3, 4, 5, 6, 9]
+    println!("{arr:?}"); // [1, 1, 2, 3, 4, 5, 6, 9]
 
     arr.sort_by(|a, b| b.cmp(a));        // 自定义排序（从大到小）
-    println!("{:?}", arr); // [9, 6, 5, 4, 3, 2, 1, 1]
+    println!("{arr:?}"); // [9, 6, 5, 4, 3, 2, 1, 1]
 
     arr.reverse();                        // 就地反转
-    println!("{:?}", arr); // [1, 1, 2, 3, 4, 5, 6, 9]
+    println!("{arr:?}"); // [1, 1, 2, 3, 4, 5, 6, 9]
 
     println!("{}", arr.contains(&5));     // 是否包含 5，true
     println!("{:?}", arr.iter().min());   // 最小值 Some(1)
     println!("{:?}", arr.iter().max());   // 最大值 Some(9)
 
     let sum: i32 = arr.iter().sum();      // 求和
-    println!("sum={}", sum);
+    println!("sum={sum}");
 
     // windows(n)：大小为 n 的滑动窗口
     for w in arr.windows(3) {
-        println!("{:?}", w);
+        println!("{w:?}");
     }
 
     // chunks(n)：每次取 n 个，不重叠
     for c in arr.chunks(3) {
-        println!("{:?}", c);
+        println!("{c:?}");
     }
 }
 ```
@@ -343,7 +343,7 @@ fn main() {
 
     // 方式二：get 方法，返回 Option<&T>，越界返回 None
     match v.get(2) {
-        Some(val) => println!("{}", val),
+        Some(val) => println!("{val}"),
         None      => println!("越界了"),
     }
 
@@ -369,7 +369,7 @@ fn main() {
     for x in &mut v {
         *x *= 2; // *x 解引用后赋值
     }
-    println!("{:?}", v); // [2, 4, 6, 8, 10]
+    println!("{v:?}"); // [2, 4, 6, 8, 10]
 }
 ```
 
@@ -391,12 +391,12 @@ fn main() {
 
     // retain：只保留满足条件的元素
     v.retain(|&x| x > 3);
-    println!("{:?}", v);
+    println!("{v:?}");
 
     // extend：把另一个迭代器的元素追加到末尾
     let more = vec![10, 20];
     v.extend(more.iter());
-    println!("{:?}", v);
+    println!("{v:?}");
 }
 ```
 
@@ -413,11 +413,11 @@ fn main() {
         .filter(|&&x| x % 2 == 0) // 偶数
         .map(|&x| x * x)           // 平方
         .collect();                // 收集成新 Vec
-    println!("{:?}", result); // [4, 16, 36]
+    println!("{result:?}"); // [4, 16, 36]
 
     // fold：累积
     let sum: i32 = v.iter().fold(0, |acc, &x| acc + x);
-    println!("sum={}", sum); // 21
+    println!("sum={sum}"); // 21
 
     // any / all
     println!("{}", v.iter().any(|&x| x > 5)); // true
@@ -493,7 +493,7 @@ fn main() {
 fn main() {
     let s = String::from("你好");
     let ni = &s[0..3]; // "你"，占字节 0、1、2
-    println!("{}", ni);
+    println!("{ni}");
     // let bad = &s[0..1]; // 运行时 panic：不在字符边界
 }
 ```
@@ -506,22 +506,22 @@ fn main() {
     let mut s = String::from("hello");
     s.push_str(", sekai");
     s.push('!'); // push 追加单个 char
-    println!("{}", s);
+    println!("{s}");
 
     // 方式二：+ 号（实际上调用 add 方法）
     let s1 = String::from("hello");
     let s2 = String::from(", sekai");
     let s3 = s1 + &s2; // s1 的所有权被移走，s2 被借用
-    // println!("{}", s1); // 编译错误：s1 已被移走
-    println!("{}", s3);
+    // println!("{s1}"); // 编译错误：s1 已被移走
+    println!("{s3}");
 
     // 方式三：format! 宏，不转移任何所有权，推荐用于拼接多个字符串
     let a = String::from("hello");
     let b = String::from(", ");
     let c = String::from("sekai");
     let result = format!("{}{}{}", a, b, c);
-    println!("{}", result);
-    println!("{} {} {}", a, b, c); // a b c 仍然有效
+    println!("{result}");
+    println!("{a} {b} {c}"); // a b c 仍然有效
 }
 ```
 
@@ -549,7 +549,7 @@ fn main() {
     let names = vec!["Charlie", "Diana"];
     let vals  = vec![90, 78];
     let map: HashMap<_, _> = names.iter().zip(vals.iter()).collect();
-    println!("{:?}", map);
+    println!("{map:?}");
 }
 ```
 
@@ -567,7 +567,7 @@ fn main() {
     let mut map = HashMap::new();
     map.insert(key, val); // key 和 val 的所有权被转移
 
-    // println!("{}", key); // 编译错误
+    // println!("{key}"); // 编译错误
 }
 ```
 
@@ -585,12 +585,12 @@ fn main() {
 
     // get 返回 Option<&V>
     if let Some(&score) = scores.get("Alice") {
-        println!("Alice: {}", score);
+        println!("Alice: {score}");
     }
 
     // 遍历（顺序不确定）
     for (name, score) in &scores {
-        println!("{}: {}", name, score);
+        println!("{name}: {score}");
     }
 }
 ```
@@ -615,7 +615,7 @@ fn main() {
         *count += 1;
     }
 
-    println!("{:?}", word_count);
+    println!("{word_count:?}");
 }
 ```
 
@@ -632,7 +632,7 @@ fn main() {
     map.entry("evens").or_insert_with(Vec::new).push(4);
     map.entry("odds").or_default().push(1);
 
-    println!("{:?}", map);
+    println!("{map:?}");
 }
 ```
 
@@ -652,7 +652,7 @@ fn main() {
 
     // values() / keys() 返回迭代器
     let sum: i32 = m.values().sum();
-    println!("值的总和: {}", sum);
+    println!("值的总和: {sum}");
 }
 ```
 
