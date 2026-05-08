@@ -73,13 +73,13 @@ Rust 的第三方库托管在 [crates.io](https://crates.io/)，这是官方的�
 cargo add rand
 ```
 
-这条命令会自动找到 `rand` 的最新版本，写入 `Cargo.toml` 的 `[dependencies]` 段。
+这条命令会自动找到 `rand` 的最新版本（当前应该是0.10+），写入 `Cargo.toml` 的 `[dependencies]` 段。
 
 第二种，手动编辑 `Cargo.toml`，在 `[dependencies]` 下加一行：
 
 ```toml
 [dependencies]
-rand = "0.9"
+rand = "0.10"
 ```
 
 然后执行 `cargo build`，Cargo 会自动下载这个包以及它所有的间接依赖，缓存到本地。第一次下载可能需要一点时间，之后会用缓存。
