@@ -54,12 +54,12 @@ cd hello_rust
 [package]
 name = "hello_rust"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 ```
 
-`[package]` 段描述这个包的基本信息。`name` 是包名，`version` 遵循语义化版本规范（主版本.次版本.补丁版本），`edition` 是 Rust 的"版次"——Rust 每隔几年会出一个新版次，每个版次可以引入一些不向后兼容的改进，目前常用的是 2021。你不需要担心版次的细节，保持默认 2021 就好。
+`[package]` 段描述这个包的基本信息。`name` 是包名，`version` 遵循语义化版本规范（主版本.次版本.补丁版本），`edition` 是 Rust 的"版次"——Rust 每隔几年会出一个新版次，每个版次可以引入一些不向后兼容的改进，目前默认使用 2024（`cargo new` 从 Rust 1.85 起自动生成 `edition = "2024"`）。2024 版次把 `gen` 正式列为关键字，部分旧库方法名因此做了改动（比如 `rand` 0.9+ 把 `gen` / `gen_range` 重命名），本教程所有示例均以 Rust 2024 为准。
 
 `[dependencies]` 段列出这个项目依赖的第三方库。现在是空的，等会儿会用到。
 
@@ -79,7 +79,7 @@ cargo add rand
 
 ```toml
 [dependencies]
-rand = "0.8"
+rand = "0.9"
 ```
 
 然后执行 `cargo build`，Cargo 会自动下载这个包以及它所有的间接依赖，缓存到本地。第一次下载可能需要一点时间，之后会用缓存。
@@ -94,8 +94,9 @@ rand = "0.8"
 use rand::Rng; // 把 rand::Rng 这个 trait 引入当前作用域
 
 fn main() {
-    let mut rng = rand::thread_rng();
-    let n: i32 = rng.gen_range(1..=100); // 生成 1 到 100 之间的随机整数
+    // rand 0.9+：rand::rng() 获取线程本地 RNG（原 thread_rng()）
+    // gen_range 已改名为 random_range（gen 是 Rust 2024 的关键字）
+    let n: i32 = rand::rng().random_range(1..=100); // 生成 1 到 100 的随机整数
     println!("随机数: {n}");
 }
 ```
@@ -130,7 +131,7 @@ fn main() {
 
 `fn main()` 是程序的入口点，程序从这里开始执行。每个可执行 Rust 程序都必须有且只有一个 `main` 函数。`fn` 是定义函数的关键字，`main` 是函数名，括号里是参数（这里是空的），花括号内是函数体。
 
-把 `"Hello, world!"` 改成 `"Hello, Sekai!"`，然后运行：
+把 `"Hello, world!"` 改成我博客一贯的风格 `"Hello, Sekai!"`，然后运行：
 
 ```bash
 cargo run
@@ -800,7 +801,7 @@ serde_json = "1"
 
 **随机数**
 
-`rand`：随机数生成，从简单的随机整数到复杂的概率分布都有。
+`rand`：随机数生成，从简单的随机整数到复杂的概率分布都有。0.9+ 版本适配 Rust 2024，`rand::rng()` 取代原来的 `thread_rng()`，方法名 `gen` / `gen_range` 改为 `random` / `random_range`。
 
 **错误处理**
 
