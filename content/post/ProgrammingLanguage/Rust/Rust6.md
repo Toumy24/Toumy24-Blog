@@ -1,350 +1,365 @@
 ﻿---
-title: "通用语言教程-Rust 篇【6】Trait 与泛型"
+title: "通用语言教程-Rust 篇【6】泛型与 Trait"
 date: 2026-05-07T14:00:00+08:00
 timezone: UTC+8
 cover: https://blog.24toumy.top/coverimg/rust.png
-tags: ["Rust","Trait","泛型","零成本抽象"]
+tags: ["Rust","泛型","Trait","多态"]
 categories:
   - 计算机语言
   - 通用语言
 draft: false
 ---
 
-## 前言
+## 泛型
 
-如果说所有权解决了"内存安全"问题，那么 Trait 和泛型解决的是"代码复用"问题。
-
-Rust 实现代码抽象有两种主要方式：**泛型（静态分发）** 和 **Trait 对象（动态分发）**。它们在运行时的行为截然不同，理解这个区别是写出高效 Rust 代码的关键。
-
-## 泛型（Generics）
+代码里经常会出现"结构完全相同，只是类型不同"的情况。泛型（Generics）让你写一份代码，适用于多种类型。泛型用 `<T>` 表示类型参数，`T` 只是习惯命名，可以用任何标识符。
 
 ### 泛型函数
 
-泛型用类型参数 `<T>` 表示"这里放一个类型，具体是什么运行时才知道"——但实际上在编译期就已经确定了：
+**通用语法格式：**
 
-```rust
-// 只能处理 i32 的版本
-fn largest_i32(list: &[i32]) -> &i32 {
-    let mut largest = &list[0];
-    for item in list {
-        if item > largest { largest = item; }
-    }
-    largest
+```text
+fn 函数名<T>(参数: T) -> T {
+    // T 在这里代表"某种类型"，调用时由编译器根据实参推断具体是什么类型
 }
 
-// 泛型版本：T 必须实现 PartialOrd（支持 > 比较）
+// 有约束时（T 必须实现某些 trait 才能调用对应方法）
+fn 函数名<T: Trait名>(参数: &[T]) -> &T { ... }
+
+// 多个约束用 +
+fn 函数名<T: Trait1 + Trait2>(参数: T) { ... }
+```
+
+不用泛型时，对 `i32` 求最大值写一个函数，对 `f64` 再写一个。用泛型写一次就够了：
+
+```rust
 fn largest<T: PartialOrd>(list: &[T]) -> &T {
     let mut largest = &list[0];
     for item in list {
-        if item > largest { largest = item; }
+        if item > largest {
+            largest = item;
+        }
     }
     largest
 }
 
 fn main() {
     let numbers = vec![34, 50, 25, 100, 65];
-    println!("最大数: {}", largest(&numbers)); // 100
+    println!("最大值: {}", largest(&numbers));
 
     let chars = vec!['y', 'm', 'a', 'q'];
-    println!("最大字符: {}", largest(&chars)); // y
+    println!("最大值: {}", largest(&chars));
 }
 ```
 
-### 单态化（Monomorphization）：零成本的秘密
-
-编译器处理泛型代码时，会做**单态化**——为每个实际使用到的类型生成一份专用代码：
-
-```text
-// 你写的：
-fn largest<T: PartialOrd>(list: &[T]) -> &T { ... }
-
-// 编译器生成的（概念上）：
-fn largest_i32(list: &[i32]) -> &i32 { ... }   // 针对 i32
-fn largest_char(list: &[char]) -> &char { ... } // 针对 char
-```
-
-这意味着泛型代码和手写各类型版本的**性能完全相同**——没有任何运行时类型查找或间接调用的开销。这就是 Rust 的**零成本抽象（Zero-cost abstraction）**。
-
-代价是编译时间增加、二进制体积变大（每种类型一份代码），但运行时是纯粹的静态调用。
+`<T: PartialOrd>` 表示 `T` 必须实现 `PartialOrd` trait，这样才能用 `>` 比较。这叫 **trait 约束（trait bound）**，没有约束的 `T` 什么方法都不能调用，因为编译器不知道这个类型支持哪些操作。
 
 ### 泛型结构体
 
 ```rust
-#[derive(Debug)]
-struct Point<T> {
-    x: T,
-    y: T,
+struct Pair<T> {
+    first: T,
+    second: T,
 }
 
-// impl 块也需要声明 <T>
-impl<T> Point<T> {
-    fn new(x: T, y: T) -> Self {
-        Point { x, y }
-    }
-
-    fn x(&self) -> &T { &self.x }
-    fn y(&self) -> &T { &self.y }
-}
-
-// 可以为特定类型单独实现额外方法
-impl Point<f64> {
-    fn distance_from_origin(&self) -> f64 {
-        (self.x * self.x + self.y * self.y).sqrt()
+impl<T> Pair<T> {
+    fn new(first: T, second: T) -> Self {
+        Pair { first, second }
     }
 }
 
-fn main() {
-    let p1 = Point::new(5, 10);         // Point<i32>
-    let p2 = Point::new(1.0_f64, 4.0); // Point<f64>
-
-    println!("p1.x = {}", p1.x());
-    println!("到原点距离: {:.2}", p2.distance_from_origin()); // 4.12
-    // p1.distance_from_origin(); // 编译错误：i32 版本没有这个方法
+impl<T: std::fmt::Display + PartialOrd> Pair<T> {
+    fn cmp_display(&self) {
+        if self.first >= self.second {
+            println!("第一个更大: {}", self.first);
+        } else {
+            println!("第二个更大: {}", self.second);
+        }
+    }
 }
 ```
 
-## Trait：定义共同的行为
+两个 `impl` 块里，第一个对所有 `T` 都实现，第二个只对满足 `Display + PartialOrd` 约束的 `T` 实现。
 
-Trait 定义了一组方法签名，任何实现了该 Trait 的类型都必须提供这些方法。这类似于 Java/C# 的 Interface，但功能更强大（可以有默认实现，可以作为泛型约束）。
+### 单态化：零成本抽象
+
+Rust 的泛型在**编译期**展开：编译器分析你实际用了哪些具体类型，为每种类型生成专门的代码。`largest::<i32>` 和 `largest::<char>` 会被编译成两份独立的机器码，和你手写两个函数一样高效。运行时不存在"查询类型是什么"的动态分发，没有任何额外开销。
+
+这就是 Rust 常说的"零成本抽象"——用泛型写出来的代码，性能和手写的特化版本相同。代价是编译时间更长（因为要展开），以及编译产物的体积更大（每种类型都有一份代码）。
+
+## Trait
+
+Trait（特征）定义了一组方法签名，任何类型只要实现了这些方法，就说它"实现了这个 trait"。Trait 是 Rust 多态的基础，类似 Java 的 interface 或 Go 的 interface，但功能更丰富。
+
+**通用语法格式：**
+
+```text
+// 定义 trait
+trait Trait名 {
+    fn 方法名(&self) -> 返回类型;         // 必须实现的方法（只有签名）
+    fn 方法名(&self) -> 返回类型 {        // 有默认实现的方法（可以被覆盖）
+        // 默认实现
+    }
+}
+
+// 为某个类型实现 trait
+impl Trait名 for 类型名 {
+    fn 方法名(&self) -> 返回类型 {
+        // 这个类型的具体实现
+    }
+}
+```
 
 ### 定义与实现
 
 ```rust
 trait Summary {
-    // 必须实现的方法（无默认实现）
-    fn summarize_author(&self) -> String;
+    fn summarize(&self) -> String;
 
-    // 有默认实现的方法（子类可以覆盖）
-    fn summarize(&self) -> String {
-        format!("（{}撰写）", self.summarize_author())
+    // 默认实现：如果类型没有提供自己的实现，使用这个
+    fn preview(&self) -> String {
+        format!("{}...", &self.summarize()[..20.min(self.summarize().len())])
     }
 }
 
-struct NewsArticle {
-    headline: String,
-    author:   String,
-    content:  String,
+struct Article {
+    title: String,
+    content: String,
 }
 
 struct Tweet {
     username: String,
-    content:  String,
+    content: String,
 }
 
-impl Summary for NewsArticle {
-    fn summarize_author(&self) -> String {
-        self.author.clone()
-    }
-
-    // 覆盖默认实现
+impl Summary for Article {
     fn summarize(&self) -> String {
-        format!("{}, by {} — {}", self.headline, self.author, &self.content[..20])
+        format!("{}: {}", self.title, self.content)
     }
 }
 
 impl Summary for Tweet {
-    fn summarize_author(&self) -> String {
-        format!("@{}", self.username)
+    fn summarize(&self) -> String {
+        format!("{}: {}", self.username, self.content)
     }
-    // 不覆盖 summarize，使用默认实现
-}
-
-fn main() {
-    let article = NewsArticle {
-        headline: String::from("Rust 2024 Edition 发布"),
-        author:   String::from("Ferris"),
-        content:  String::from("今天，Rust 社区正式发布了..."),
-    };
-    let tweet = Tweet {
-        username: String::from("rustlang"),
-        content:  String::from("Rust 越来越好用了！"),
-    };
-
-    println!("{}", article.summarize());
-    println!("{}", tweet.summarize()); // 使用默认实现
+    // preview 使用默认实现，不需要写
 }
 ```
 
-### Trait 作为参数：静态分发 vs 动态分发
+### 孤儿规则
 
-这是 Rust 中非常重要的选择点，值得深入理解。
+可以为自己的类型实现外部 trait，也可以为外部类型实现自己的 trait，但不能为外部类型实现外部 trait。简单说：trait 和类型至少有一个得是你写的。
 
-**方式一：`impl Trait` / Trait Bound（静态分发）**
+这条限制保证了别人的代码不会悄悄改变你的类型的行为。
+
+### Trait 作为参数
+
+用 `impl Trait` 语法表示"实现了某个 trait 的类型"：
 
 ```rust
-// impl Trait 写法（语法糖）
 fn notify(item: &impl Summary) {
-    println!("消息: {}", item.summarize());
-}
-
-// 等价的泛型 Trait Bound 写法
-fn notify_generic<T: Summary>(item: &T) {
-    println!("消息: {}", item.summarize());
-}
-
-// 多个 Trait 约束
-fn notify_display<T: Summary + std::fmt::Display>(item: &T) {
-    println!("{}", item);
-    println!("{}", item.summarize());
-}
-
-// where 子句（约束复杂时更易读）
-fn compare<T, U>(t: &T, u: &U)
-where
-    T: Summary + std::fmt::Debug,
-    U: Summary + Clone,
-{
-    println!("{:?}", t);
-    println!("{}", u.summarize());
+    println!("新内容: {}", item.summarize());
 }
 ```
 
-编译器会为每种具体类型生成专用的 `notify` 函数（单态化），调用开销与直接调用方法相同。
-
-**方式二：`dyn Trait`（动态分发，Trait 对象）**
+这是语法糖，完整写法是：
 
 ```rust
-fn notify_dynamic(item: &dyn Summary) {
-    // 运行时通过 vtable（虚函数表）查找实际方法
-    println!("消息: {}", item.summarize());
+fn notify<T: Summary>(item: &T) {
+    println!("新内容: {}", item.summarize());
+}
+```
+
+多个约束用 `+`：
+
+```rust
+fn notify<T: Summary + std::fmt::Display>(item: &T) {
+    println!("{}", item);
+}
+```
+
+复杂时用 `where` 让签名更清晰：
+
+```rust
+fn compare_and_display<T, U>(t: &T, u: &U)
+where
+    T: std::fmt::Display + PartialOrd,
+    U: std::fmt::Display + Clone,
+{
+    // ...
+}
+```
+
+## 静态分发与动态分发
+
+Trait 有两种使用方式，运行机制完全不同。
+
+### 静态分发（impl Trait / 泛型）
+
+用泛型或 `impl Trait` 时，编译器在编译期就知道具体类型，为每种类型生成专用代码。调用哪个方法在编译期就确定了，没有运行时查找，速度最快。缺点是同一个函数对不同类型会生成多份代码，编译产物更大。
+
+### 动态分发（dyn Trait）
+
+有时候你不能或不想在编译期确定类型，比如需要把不同类型的值放进同一个集合：
+
+```rust
+trait Draw {
+    fn draw(&self);
+}
+
+struct Circle;
+struct Square;
+
+impl Draw for Circle {
+    fn draw(&self) { println!("画圆"); }
+}
+
+impl Draw for Square {
+    fn draw(&self) { println!("画方形"); }
 }
 
 fn main() {
-    let article = NewsArticle { /* ... */
-        headline: String::from("新闻"),
-        author:   String::from("作者"),
-        content:  String::from("内容内容内容内容内容"),
-    };
-    let tweet = Tweet {
-        username: String::from("user"),
-        content:  String::from("推文"),
-    };
-
-    // 可以存储不同类型到同一个 Vec（静态分发做不到）
-    let items: Vec<Box<dyn Summary>> = vec![
-        Box::new(NewsArticle { headline: String::from("h"), author: String::from("a"), content: String::from("aaaaaaaaaaaaaaaaaaa") }),
-        Box::new(Tweet { username: String::from("u"), content: String::from("t") }),
+    // Box<dyn Draw> 是指向堆上某个实现了 Draw 的对象的指针
+    let shapes: Vec<Box<dyn Draw>> = vec![
+        Box::new(Circle),
+        Box::new(Square),
+        Box::new(Circle),
     ];
 
-    for item in &items {
-        println!("{}", item.summarize());
+    for shape in &shapes {
+        shape.draw(); // 运行时才确定调用哪个 draw
     }
 }
 ```
 
-**vtable（虚函数表）**：每个 `dyn Trait` 的胖指针由两部分组成：
-1. 指向数据的指针
-2. 指向该类型的 vtable 的指针
+`dyn Draw` 的底层是一个"胖指针"，包含两个指针：一个指向数据本身，一个指向**虚函数表（vtable）**。vtable 里存着这个类型实现的所有 trait 方法的函数指针。调用方法时，先查 vtable 找到函数地址，再调用——这比静态分发多一次指针间接跳转，有一点开销，但通常可以忽略不计。
 
-vtable 里存了各方法的函数指针，运行时通过它查找实际调用哪个函数。
+`dyn Trait` 必须放在引用（`&dyn Trait`）或 `Box`（`Box<dyn Trait>`）后面，因为编译器不知道具体类型的大小，不能直接放在栈上。
 
-| 方式 | 分发时机 | 性能 | 灵活性 |
-|------|---------|------|-------|
-| `impl Trait` / `<T: Trait>` | 编译期（单态化） | 最优（无间接调用） | 同一函数调用必须是同一类型 |
-| `dyn Trait` | 运行时（vtable） | 有间接调用开销 | 可以混合不同类型 |
+选择建议：大多数情况用泛型（静态分发）；需要把不同类型混放在一起、或者需要在运行时才知道类型时，用 `dyn Trait`（动态分发）。
 
-**经验法则**：默认用泛型（静态分发）；当你需要**在运行时存储不同类型**（比如插件系统、事件回调），再用 `dyn Trait`。
+## 常用标准库 Trait
 
-### 常用标准库 Trait
+| Trait | 用途 | 如何启用 |
+|-------|------|---------|
+| `Clone` | 显式深拷贝 | `#[derive(Clone)]` |
+| `Copy` | 赋值时隐式复制（只适用于栈类型） | `#[derive(Copy, Clone)]` |
+| `Debug` | `{:?}` 格式化输出 | `#[derive(Debug)]` |
+| `Display` | `{}` 格式化输出 | 手动实现 `impl fmt::Display` |
+| `PartialEq` / `Eq` | `==` 和 `!=` 比较 | `#[derive(PartialEq, Eq)]` |
+| `PartialOrd` / `Ord` | `<`、`>`、`<=`、`>=` 比较 | `#[derive(PartialOrd, Ord)]` |
+| `Default` | 提供默认值 | `#[derive(Default)]` 或手动实现 |
+| `Iterator` | 实现迭代器协议 | 手动实现 `fn next` |
+| `From` / `Into` | 类型转换 | 实现 `From`，`Into` 自动得到 |
+| `Add`、`Sub` 等 | 运算符重载 | 手动实现 `std::ops::Add` 等 |
+
+### derive 宏
+
+`#[derive(...)]` 让编译器自动为你的类型生成标准实现：
 
 ```rust
-use std::fmt;
-use std::ops::Add;
-
 #[derive(Debug, Clone, PartialEq)]
-struct Vector2D {
+struct Point {
     x: f64,
     y: f64,
 }
 
-// Display Trait：控制 {} 格式化输出
-impl fmt::Display for Vector2D {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "({}, {})", self.x, self.y)
+fn main() {
+    let p1 = Point { x: 1.0, y: 2.0 };
+    let p2 = p1.clone();
+    println!("{:?}", p1);    // Debug 格式
+    println!("{}", p1 == p2); // PartialEq 比较，true
+}
+```
+
+### 手动实现 Display
+
+```rust
+use std::fmt;
+
+struct Matrix {
+    a: f64, b: f64,
+    c: f64, d: f64,
+}
+
+impl fmt::Display for Matrix {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[{} {}]\n[{} {}]", self.a, self.b, self.c, self.d)
     }
 }
 
-// Add Trait：重载 + 运算符
-impl Add for Vector2D {
-    type Output = Vector2D; // 关联类型：指定 + 的返回类型
-    fn add(self, other: Vector2D) -> Vector2D {
-        Vector2D {
-            x: self.x + other.x,
-            y: self.y + other.y,
+fn main() {
+    let m = Matrix { a: 1.0, b: 2.0, c: 3.0, d: 4.0 };
+    println!("{}", m);
+}
+```
+
+### 运算符重载
+
+```rust
+use std::ops::Add;
+
+#[derive(Debug, Clone, Copy)]
+struct Vec2 {
+    x: f64,
+    y: f64,
+}
+
+impl Add for Vec2 {
+    type Output = Vec2;
+    fn add(self, rhs: Vec2) -> Vec2 {
+        Vec2 { x: self.x + rhs.x, y: self.y + rhs.y }
+    }
+}
+
+fn main() {
+    let a = Vec2 { x: 1.0, y: 2.0 };
+    let b = Vec2 { x: 3.0, y: 4.0 };
+    let c = a + b;
+    println!("{:?}", c); // Vec2 { x: 4.0, y: 6.0 }
+}
+```
+
+### 自定义迭代器
+
+实现 `Iterator` trait 只需要提供 `next` 方法：
+
+```rust
+struct Counter {
+    count: u32,
+    max: u32,
+}
+
+impl Counter {
+    fn new(max: u32) -> Counter {
+        Counter { count: 0, max }
+    }
+}
+
+impl Iterator for Counter {
+    type Item = u32;
+
+    fn next(&mut self) -> Option<u32> {
+        if self.count < self.max {
+            self.count += 1;
+            Some(self.count)
+        } else {
+            None
         }
     }
 }
 
 fn main() {
-    let v1 = Vector2D { x: 1.0, y: 2.0 };
-    let v2 = Vector2D { x: 3.0, y: 4.0 };
+    let sum: u32 = Counter::new(5).sum(); // 1+2+3+4+5
+    println!("{}", sum); // 15
 
-    println!("{}", v1);       // (1, 2)     ← Display
-    println!("{:?}", v1);     // Vector2D { x: 1.0, y: 2.0 } ← Debug
-    println!("{}", v1 == v1.clone()); // true ← PartialEq + Clone
-
-    let v3 = v1 + v2;         // ← Add
-    println!("{}", v3);       // (4, 6)
-}
-```
-
-| Trait | 作用 | `#[derive]` |
-|-------|------|------------|
-| `Debug` | `{:?}` 调试输出 | ✅ |
-| `Display` | `{}` 用户友好输出 | ❌ 需手动 |
-| `Clone` | `.clone()` 深拷贝 | ✅ |
-| `Copy` | 隐式按位复制 | ✅（需所有字段也是 Copy）|
-| `PartialEq` / `Eq` | `==` 运算符 | ✅ |
-| `PartialOrd` / `Ord` | 比较大小 | ✅ |
-| `Hash` | 可用作 HashMap 键 | ✅ |
-| `Default` | `Default::default()` 默认值 | ✅ |
-| `From` / `Into` | 类型转换 | 部分 ✅ |
-| `Iterator` | 迭代器协议 | ❌ 需手动 |
-
-### 自定义迭代器
-
-任何实现了 `Iterator` Trait 的类型，都能使用 `for` 循环以及所有迭代器适配器（`map`、`filter`、`take` 等）：
-
-```rust
-struct Fibonacci {
-    a: u64,
-    b: u64,
-}
-
-impl Fibonacci {
-    fn new() -> Fibonacci {
-        Fibonacci { a: 0, b: 1 }
-    }
-}
-
-impl Iterator for Fibonacci {
-    type Item = u64; // 迭代器产出的元素类型
-
-    fn next(&mut self) -> Option<u64> {
-        let next_val = self.a;
-        // 更新状态
-        let new_b = self.a + self.b;
-        self.a = self.b;
-        self.b = new_b;
-        Some(next_val) // 斐波那契数列无穷，永远返回 Some
-    }
-}
-
-fn main() {
-    // take(10) 限制只取前 10 个
-    let fibs: Vec<u64> = Fibonacci::new().take(10).collect();
-    println!("{:?}", fibs); // [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
-
-    // 配合所有迭代器方法
-    let sum: u64 = Fibonacci::new().take(10).sum();
-    println!("前10项之和: {}", sum); // 88
-
-    let big_fibs: Vec<u64> = Fibonacci::new()
-        .take(20)
-        .filter(|&x| x > 100)
+    // 实现了 Iterator 后，filter/map/zip 等方法全部自动可用
+    let result: Vec<u32> = Counter::new(5)
+        .zip(Counter::new(5).skip(1))
+        .map(|(a, b)| a * b)
         .collect();
-    println!("前20项中 > 100 的: {:?}", big_fibs);
+    println!("{:?}", result); // [2, 6, 12, 20]
 }
 ```
 
-实现 `next` 方法，你就免费获得了整个迭代器适配器生态系统——这就是 Trait 的威力。
+只需实现一个方法，就能获得标准库里几十个迭代器方法。这是 trait 的典型用法：提供少量核心接口，在上面构建大量通用逻辑。

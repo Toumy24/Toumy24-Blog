@@ -1,299 +1,391 @@
 ﻿---
-title: "通用语言教程-Rust 篇【4】函数、结构体与枚举"
+title: "通用语言教程-Rust 篇【4】函数、闭包与自定义类型"
 date: 2026-05-07T12:00:00+08:00
 timezone: UTC+8
 cover: https://blog.24toumy.top/coverimg/rust.png
-tags: ["Rust","函数","结构体","枚举","闭包"]
+tags: ["Rust","函数","闭包","结构体","枚举","Option","Result"]
 categories:
   - 计算机语言
   - 通用语言
 draft: false
 ---
 
-## 前言
-
-这一章把 Rust 里"组织代码"的核心工具全部过一遍：函数、闭包、结构体、枚举，以及标准库里最重要的两个枚举 `Option` 和 `Result`。
-
-每个知识点都有值得深挖的内部机制，比如"函数最后一个表达式就是返回值"背后的语义，闭包捕获变量的三种方式，枚举在内存里的存储方式，以及 `Option` 彻底替代 `null` 的设计逻辑。
-
 ## 函数
 
-### 定义与调用
+Rust 的函数用 `fn` 关键字定义。每个参数必须显式声明类型，返回值类型用 `->` 标出。
 
-```rust
-fn greet(name: &str) {        // 参数必须标注类型
-    println!("你好，{}！", name);
+**通用语法格式：**
+
+```text
+fn 函数名(参数名: 参数类型, 参数名: 参数类型, ...) -> 返回类型 {
+    // 函数体
+    // 最后一个表达式（不加分号）作为返回值
+    // 也可以用 return 表达式; 提前返回
 }
 
-fn add(a: i32, b: i32) -> i32 { // -> 后跟返回类型
-    a + b  // 最后一个表达式（不带分号）就是返回值
-}
-
-fn main() {
-    greet("Rust");
-    let sum = add(3, 5);
-    println!("3 + 5 = {}", sum);
-}
-```
-
-### 表达式 vs 语句——为什么不加分号就是返回值？
-
-Rust 区分两个概念：
-
-- **语句（statement）**：执行某些操作，**不产生值**，末尾有分号
-- **表达式（expression）**：求值，**产生一个值**，末尾没有分号
-
-```rust
-fn example() -> i32 {
-    let x = 5;   // 语句：let 绑定，不产生值（x = 5 本身是赋值语句，不能写 let y = let x = 5）
-    x + 1        // 表达式：产生值 6，这就是函数的返回值
-    // x + 1;   // 若加了分号，变成语句，函数返回 () 而非 i32 → 编译错误
+// 没有返回值时，省略 -> 部分（等同于 -> ()）
+fn 函数名(参数名: 参数类型) {
+    // 函数体
 }
 ```
 
-加了分号代表"我不想用这个值，执行就好"；不加分号代表"这个值就是我要传出去的"。函数体就是一个块表达式，它的值是最后一个表达式的值。
+```rust
+fn add(a: i32, b: i32) -> i32 {
+    a + b // 没有分号，这行的值就是函数的返回值
+}
+```
 
-这种设计来源于函数式语言（Haskell、ML 等），Rust 把这个思想引入了系统级语言。
+注意最后一行没有分号。这不是省略，而是 Rust 的**表达式语义**：没有分号的最后一行是函数的**返回值**。
 
-### 多返回值：用元组
+加上分号就变成了**语句**，语句不产生值，函数就只返回 `()`（空元组，即"什么都不返回"）：
 
 ```rust
-fn min_max(arr: &[i32]) -> (i32, i32) {
-    let mut min = arr[0];
-    let mut max = arr[0];
-    for &val in arr {      // &val 解构引用，val 直接是 i32
-        if val < min { min = val; }
-        if val > max { max = val; }
+fn bad(a: i32) -> i32 {
+    a + 1; // 分号让这行变成语句，函数返回 ()，和声明的 i32 不符
+}          // 编译错误
+```
+
+也可以用 `return` 提前返回：
+
+```rust
+fn classify(n: i32) -> &'static str {
+    if n < 0 {
+        return "negative";
     }
-    (min, max) // 返回元组（仍是表达式，不加分号）
+    if n == 0 {
+        return "zero";
+    }
+    "positive"
+}
+```
+
+### 表达式与语句
+
+这是 Rust 里让初学者困惑的地方，值得单独说清楚。
+
+**语句**（statement）执行动作，没有值。`let x = 5;` 是语句，`println!("hello");` 是语句。语句以分号结尾，或者本身就是某些关键字结构（`use`、`fn` 定义等）。
+
+**表达式**（expression）求值，有值。`3 + 4` 是表达式（值是 7），`{let x = 1; x + 2}` 这整个代码块也是表达式（值是 3），`if x > 0 { 1 } else { -1 }` 是表达式。
+
+分号的作用是把表达式变成语句，丢弃它的值。正是因为这个语义，Rust 里的 `if` 和代码块都可以出现在赋值语句的右边：
+
+```rust
+fn main() {
+    let n = 42;
+
+    let description = if n > 0 { "positive" } else { "non-positive" };
+    println!("{}", description);
+
+    let y = {
+        let x = 3;
+        x * x + 1 // 没有分号，这是块的值
+    };
+    println!("{}", y); // 10
+}
+```
+
+### 多返回值
+
+Rust 函数只能有一个返回值，但可以把多个值打包成元组返回：
+
+```rust
+fn min_max(v: &[i32]) -> (i32, i32) {
+    let mut min = v[0];
+    let mut max = v[0];
+    for &x in v {
+        if x < min { min = x; }
+        if x > max { max = x; }
+    }
+    (min, max)
 }
 
 fn main() {
     let nums = [3, 1, 4, 1, 5, 9, 2, 6];
     let (min, max) = min_max(&nums); // 解构赋值
-    println!("最小: {}, 最大: {}", min, max);
+    println!("min={}, max={}", min, max);
 }
 ```
 
-## 闭包（Closure）
+## 闭包
 
-闭包是**能捕获外部环境变量**的匿名函数。
+闭包（Closure）是可以**捕获其定义环境中变量**的匿名函数。和普通函数相比，闭包的两个特点是：不需要名字，以及可以"记住"外部作用域里的变量（这叫捕获）。
+
+**通用语法格式：**
+
+```text
+// 单行闭包（表达式直接作为返回值）
+|参数1, 参数2, ...| 表达式
+
+// 多行闭包
+|参数1, 参数2, ...| {
+    // 多行代码
+    表达式  // 最后一行无分号，作为返回值
+}
+
+// 参数和返回值类型通常可省略，编译器自动推断
+// 需要明确时可以标注：
+|x: i32, y: i32| -> i32 { x + y }
+```
 
 ```rust
 fn main() {
-    let factor = 3;
-
-    // 闭包语法：|参数| 表达式 或 |参数| { 块 }
-    let multiply = |x| x * factor; // 捕获了外部的 factor
-    // 等价于 Python 的：multiply = lambda x: x * factor
-
-    println!("{}", multiply(5));  // 15
-    println!("{}", multiply(10)); // 30
-
-    // 完整写法（带类型标注，通常不需要，编译器能推断）
-    let add = |a: i32, b: i32| -> i32 { a + b };
-    println!("{}", add(3, 4)); // 7
+    let base = 10;
+    let add_base = |x| x + base; // 捕获了外部的 base 变量
+    println!("{}", add_base(5)); // 15
 }
 ```
 
-### 闭包捕获变量的三种方式
+和函数不同，闭包通常不需要标注参数和返回值类型，编译器会根据使用方式推断。
 
-闭包根据如何使用被捕获的变量，实现三个不同的 Trait：
+### 闭包捕获变量的方式
 
-| Trait | 捕获方式 | 说明 |
-|-------|---------|------|
-| `FnOnce` | 取得所有权（move） | 只能调用一次（值被消耗） |
-| `FnMut` | 可变借用 `&mut` | 可以修改被捕获的变量，可多次调用 |
-| `Fn` | 不可变借用 `&` | 只读，可多次调用 |
+闭包根据如何使用捕获的变量，分为三类：
 
-编译器会自动推断闭包实现哪个 Trait（取最宽松的那个）：
+**`Fn`** — 只读地借用捕获的变量。可以被调用多次，每次调用后外部变量仍然有效。
+
+```rust
+fn call_twice<F: Fn()>(f: F) {
+    f();
+    f();
+}
+
+fn main() {
+    let msg = String::from("hello");
+    call_twice(|| println!("{}", msg)); // 不可变借用 msg
+    println!("{}", msg); // msg 仍然有效
+}
+```
+
+**`FnMut`** — 可变地借用捕获的变量。每次调用可能修改捕获的值：
+
+```rust
+fn main() {
+    let mut count = 0;
+    let mut increment = || {
+        count += 1;
+        println!("count: {}", count);
+    };
+    increment();
+    increment();
+}
+```
+
+**`FnOnce`** — 消耗捕获的变量，只能被调用一次：
+
+```rust
+fn consume<F: FnOnce()>(f: F) {
+    f();
+    // f(); // 编译错误，f 的所有权已在第一次调用时被消耗
+}
+
+fn main() {
+    let s = String::from("hello");
+    consume(|| {
+        println!("{}", s);
+        drop(s); // 这里消耗了 s，所以这是 FnOnce
+    });
+}
+```
+
+三者之间有包含关系：`Fn` 也是 `FnMut`，`FnMut` 也是 `FnOnce`。写参数类型时，能用 `Fn` 就用 `Fn`，限制最松，接受最广泛的闭包。
+
+### move 闭包
+
+有时需要闭包取得（而不是借用）捕获变量的所有权，在 `||` 前加 `move`：
 
 ```rust
 fn main() {
     let s = String::from("hello");
+    let owned_closure = move || println!("{}", s); // s 的所有权移入闭包
 
-    // Fn：只读借用
-    let print_s = || println!("{}", s); // 只是读 s，实现 Fn
-    print_s();
-    print_s(); // 可以多次调用
-    println!("{}", s); // s 仍然有效
-
-    // FnMut：可变借用
-    let mut count = 0;
-    let mut increment = || {
-        count += 1; // 修改了 count，实现 FnMut
-        count
-    };
-    println!("{}", increment()); // 1
-    println!("{}", increment()); // 2
-
-    // FnOnce：通过 move 取得所有权
-    let s2 = String::from("world");
-    let consume = move || {
-        println!("{}", s2); // move 强制将 s2 所有权移入闭包
-        drop(s2);           // 消耗掉 s2
-    };
-    consume();
-    // consume(); // 编译错误：s2 已被消耗，FnOnce 只能调用一次
+    // println!("{}", s); // 编译错误：s 已被移走
+    owned_closure();
 }
 ```
 
-`move` 关键字在**线程**中非常重要：线程的闭包必须用 `move`，确保捕获的变量的所有权转移进线程，而不是留在原线程上（原线程可能先于子线程结束）。
+`move` 闭包最常见于跨线程传递，因为新线程的生命周期不能确定，必须取得所有权而不是借用。
 
-### 闭包配合迭代器：函数式编程风格
+## 结构体
+
+结构体（Struct）把多个有关联的数据字段组合在一起，给这组数据起一个有意义的名字。结构体是 Rust 里构建自定义类型的最基本方式之一。
+
+**通用语法格式：**
+
+```text
+struct 结构体名 {
+    字段名: 类型,
+    字段名: 类型,
+    // ...（字段之间用逗号分隔，最后一个字段后的逗号可选）
+}
+```
+
+```rust
+struct User {
+    username: String,
+    email: String,
+    age: u32,
+    active: bool,
+}
+```
+
+创建实例时，所有字段都必须初始化：
 
 ```rust
 fn main() {
-    let nums = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    let user1 = User {
+        username: String::from("alice"),
+        email: String::from("alice@example.com"),
+        age: 30,
+        active: true,
+    };
 
-    // map + filter + collect（惰性求值，只在 collect 时真正执行）
-    let result: Vec<i32> = nums.iter()
-        .filter(|&&x| x % 2 == 0)  // 保留偶数
-        .map(|&x| x * x)           // 求平方
-        .collect();
-    // 等价于 Python：[x**2 for x in nums if x % 2 == 0]
-    println!("{:?}", result); // [4, 16, 36, 64, 100]
-
-    // 折叠（fold/reduce）
-    let sum: i32 = nums.iter().sum();
-    let product: i32 = nums.iter().product();
-    println!("sum={}, product={}", sum, product);
-
-    // any / all
-    println!("有偶数: {}", nums.iter().any(|&x| x % 2 == 0)); // true
-    println!("全是正数: {}", nums.iter().all(|&x| x > 0));    // true
+    println!("{}", user1.username);
 }
 ```
 
-## 结构体（Struct）
-
-### 定义与使用
+如果变量名和字段名一样，可以简写：
 
 ```rust
-struct Student {
-    name: String,
-    age:  u32,
-    score: f64,
-}
-
-fn main() {
-    let stu = Student {
-        name: String::from("小明"),
-        age:  18,
-        score: 92.5,
-    };
-    println!("姓名: {}, 年龄: {}, 成绩: {}", stu.name, stu.age, stu.score);
-
-    // 可变实例（整个结构体都是 mut，不能只让某个字段可变）
-    let mut stu2 = Student {
-        name: String::from("小红"),
-        age:  17,
-        score: 88.0,
-    };
-    stu2.score = 95.0;
-
-    // 结构体更新语法：从另一个实例继承未指定的字段
-    let stu3 = Student {
-        name: String::from("小李"),
-        ..stu2 // 注意：stu2.name 的所有权被移走（如果有 String 字段）
-               // age 和 score 是 Copy 类型，直接复制
-    };
-    println!("小李年龄: {}", stu3.age); // 17（从 stu2 继承）
+fn new_user(username: String, email: String) -> User {
+    User {
+        username,          // 等同于 username: username
+        email,             // 等同于 email: email
+        age: 0,
+        active: true,
+    }
 }
 ```
 
-### 方法（impl 块）
+结构体更新语法可以从已有实例复制剩余字段：
 
-Rust 通过 `impl` 块为结构体定义方法，把数据和行为关联起来——这就是 Rust 的"面向对象"（但没有继承）：
+```rust
+fn main() {
+    let user1 = User {
+        username: String::from("alice"),
+        email: String::from("alice@example.com"),
+        age: 30,
+        active: true,
+    };
+
+    let user2 = User {
+        email: String::from("bob@example.com"),
+        username: String::from("bob"),
+        ..user1 // age 和 active 从 user1 复制
+    };
+    // 注意：因为 username 和 email 是 String（不是 Copy），
+    // ..user1 会移动 user1 中对应字段的所有权。
+    // 这里 age 和 active 是 Copy，所以 user1.age 和 user1.active 仍可用。
+}
+```
+
+### 元组结构体
+
+没有字段名，只有类型的结构体：
+
+```rust
+struct Color(u8, u8, u8);
+struct Point(f64, f64);
+
+fn main() {
+    let red = Color(255, 0, 0);
+    let origin = Point(0.0, 0.0);
+    println!("Red: {} {} {}", red.0, red.1, red.2);
+}
+```
+
+元组结构体常用来给基本类型套一层有意义的名字，避免把 `Color` 和 `Point` 混用。
+
+### 为结构体实现方法
+
+方法定义在 `impl` 块里。所谓方法，就是第一个参数是 `self`（代表调用者自身）的函数，通过 `实例.方法名()` 调用；没有 `self` 的叫**关联函数（associated function）**，通过 `结构体名::函数名()` 调用，常用于构造器。
+
+**通用语法格式：**
+
+```text
+impl 结构体名 {
+    // 关联函数（没有 self，通过 结构体名::函数名() 调用）
+    fn 函数名(参数: 类型, ...) -> 返回类型 { ... }
+
+    // 不可变方法（只读，不修改 self）
+    fn 方法名(&self) -> 返回类型 { ... }
+
+    // 可变方法（可以修改 self 的字段）
+    fn 方法名(&mut self) -> 返回类型 { ... }
+
+    // 消耗方法（调用后 self 不可再用，少见）
+    fn 方法名(self) -> 返回类型 { ... }
+}
+```
+
+`Self`（大写）在 `impl` 块里是当前结构体类型的别名，等同于直接写结构体名：
 
 ```rust
 struct Rectangle {
-    width:  f64,
+    width: f64,
     height: f64,
 }
 
 impl Rectangle {
-    // 关联函数（associated function）：不接收 self，类似其他语言的静态方法
-    // 常用作构造器，按惯例命名为 new
-    fn new(width: f64, height: f64) -> Rectangle {
-        Rectangle { width, height } // 字段名与变量名同名时可简写
-    }
-
-    // 方法：第一个参数是 &self（对当前实例的不可变引用）
-    // 调用时写 rect.area()，Rust 自动传入 &rect 作为 self
+    // &self 表示不可变借用 self，方法读取数据但不修改
     fn area(&self) -> f64 {
         self.width * self.height
     }
 
-    fn perimeter(&self) -> f64 {
-        2.0 * (self.width + self.height)
-    }
-
-    // 可变方法：第一个参数是 &mut self
+    // &mut self 表示可变借用，方法可以修改数据
     fn scale(&mut self, factor: f64) {
-        self.width  *= factor;
+        self.width *= factor;
         self.height *= factor;
     }
 
-    // 消耗 self（取得所有权）：第一个参数是 self（无引用）
-    // 调用后 self 失效
-    fn describe(self) -> String {
-        format!("Rectangle({}x{})", self.width, self.height)
+    // self（无引用）表示消耗 self，调用后实例不可再用（少见）
+    fn consume(self) -> f64 {
+        self.width * self.height
+    }
+
+    // 没有 self 的叫关联函数（associated function），不绑定具体实例
+    // 常用于构造器
+    fn new(width: f64, height: f64) -> Self {
+        Rectangle { width, height }
+    }
+
+    fn square(size: f64) -> Self {
+        Rectangle { width: size, height: size }
     }
 }
 
 fn main() {
-    let mut rect = Rectangle::new(5.0, 3.0);
-    println!("面积: {}", rect.area());       // 15
-    println!("周长: {}", rect.perimeter()); // 16
+    let mut rect = Rectangle::new(4.0, 3.0); // 关联函数用 :: 调用
+    println!("面积: {}", rect.area());
     rect.scale(2.0);
-    println!("放大后: {}", rect.describe()); // Rectangle(10x6)
-    // println!("{}", rect.area()); // 编译错误：rect 已被 describe 消耗
+    println!("放大后面积: {}", rect.area()); // 48.0
 }
 ```
 
-**方法解析（Method Resolution）**：调用 `rect.area()` 时，Rust 会自动给 `rect` 加上 `&`（因为 `area` 需要 `&self`）。这就是 Rust 的**自动引用与解引用**（auto-ref/deref），和 C++ 的 `->` 操作符类似但更统一。
+## 枚举
 
-### 元组结构体（Tuple Struct）
+枚举（Enum）定义一种类型，它的值只能是若干个**变体（variant）**之一。每个变体可以没有数据，也可以携带不同类型和数量的数据。
 
-没有字段名的结构体，通过 `.0`、`.1` 访问字段，常用于创建新类型：
+**通用语法格式：**
+
+```text
+enum 枚举名 {
+    变体名,                              // 无数据的变体
+    变体名(类型),                        // 元组变体，携带一个值
+    变体名(类型1, 类型2),                // 元组变体，携带多个值
+    变体名 { 字段名: 类型, ... },        // 结构体变体，带命名字段
+}
+```
 
 ```rust
-struct Meters(f64);    // 米
-struct Kilograms(f64); // 千克
-
-fn add_meters(a: Meters, b: Meters) -> Meters {
-    Meters(a.0 + b.0)
+enum Direction {
+    North,
+    South,
+    East,
+    West,
 }
 
 fn main() {
-    let height = Meters(1.75);
-    let weight = Kilograms(70.0);
-    // add_meters(height, weight); // 编译错误：类型不同，即使底层都是 f64
-    // 这就是"新类型模式"（newtype pattern），用来在类型系统层面区分语义
-    println!("身高: {}m", height.0);
-}
-```
-
-## 枚举（Enum）
-
-Rust 的枚举是**带标签的联合体（tagged union）**，每个变体可以携带不同类型的数据。这比 C 的 `union` 安全（因为始终知道当前是哪个变体），也比 C++ 的 `std::variant` 简洁。
-
-### 内存布局
-
-```rust
-enum Shape {
-    Circle(f64),          // 变体标签(1字节) + f64(8字节) → 共 16 字节（含对齐）
-    Rectangle(f64, f64),  // 变体标签 + f64 + f64 → 共 24 字节
-    Point,                // 变体标签 + 无数据 → 1字节（含对齐后可能更多）
-}
-// 整个枚举的大小 = 最大变体的大小（所有变体共用同一块内存）
-```
-
-```rust
-enum Direction { North, South, East, West }
-
-fn move_player(dir: Direction) {
+    let dir = Direction::North;
     match dir {
         Direction::North => println!("向北"),
         Direction::South => println!("向南"),
@@ -303,54 +395,42 @@ fn move_player(dir: Direction) {
 }
 ```
 
-### 携带数据的枚举
+枚举的强大之处在于每个变体可以携带不同类型和数量的数据：
 
 ```rust
-#[derive(Debug)]
-enum Message {
-    Quit,                       // 无数据
-    Move { x: i32, y: i32 },   // 匿名结构体
-    Write(String),              // 元组变体
-    Color(u8, u8, u8),          // 多元组变体
+enum Shape {
+    Circle(f64),                      // 半径
+    Rectangle(f64, f64),              // 宽、高
+    Triangle { base: f64, height: f64 }, // 具名字段
 }
 
-impl Message {
-    fn process(&self) {
-        match self {
-            Message::Quit              => println!("退出"),
-            Message::Move { x, y }    => println!("移动到 ({}, {})", x, y),
-            Message::Write(text)       => println!("写入: {}", text),
-            Message::Color(r, g, b)   => println!("颜色 RGB({}, {}, {})", r, g, b),
-        }
-    }
-}
-
-fn main() {
-    let msgs = vec![
-        Message::Move { x: 10, y: 20 },
-        Message::Write(String::from("Hello")),
-        Message::Color(255, 128, 0),
-        Message::Quit,
-    ];
-    for msg in &msgs {
-        msg.process();
+fn area(shape: &Shape) -> f64 {
+    match shape {
+        Shape::Circle(r) => std::f64::consts::PI * r * r,
+        Shape::Rectangle(w, h) => w * h,
+        Shape::Triangle { base, height } => 0.5 * base * height,
     }
 }
 ```
 
-## Option\<T\>：告别 null
+这种"携带数据的枚举"在其他语言里通常需要用类继承或标记 union 来模拟，Rust 把它内置进了语言。
 
-`null` 是托尼·霍尔（Tony Hoare）1965年设计的，他后来称之为"十亿美元错误"——因为空指针解引用导致了无数程序崩溃和安全漏洞。
+## Option：用类型替代 null
 
-Rust 没有 `null`。它用 `Option<T>` 枚举来表示"可能有值，也可能没有"：
+很多语言用 `null` 表示"值不存在"。问题是 null 检查常常被遗忘，"百亿美元的错误"（null pointer dereference）由此而来。
+
+Rust 没有 null。标准库的 `Option<T>` 枚举承担了同样的职责，但通过类型系统强制你处理"值不存在"的情况：
 
 ```rust
-// 标准库中 Option 的定义（概念上）：
-// enum Option<T> {
-//     Some(T), // 有值
-//     None,    // 没有值
-// }
+enum Option<T> {
+    Some(T), // 有值
+    None,    // 没有值
+}
+```
 
+`Option` 在 prelude 里，不需要 `use`，`Some` 和 `None` 也可以直接用：
+
+```rust
 fn divide(a: f64, b: f64) -> Option<f64> {
     if b == 0.0 {
         None
@@ -360,79 +440,107 @@ fn divide(a: f64, b: f64) -> Option<f64> {
 }
 
 fn main() {
-    // 必须处理 None 才能用值
-    let result = divide(10.0, 2.0);
-    match result {
-        Some(val) => println!("结果: {}", val),
-        None      => println!("除数不能为零"),
+    match divide(10.0, 2.0) {
+        Some(result) => println!("结果: {}", result),
+        None         => println!("除数不能为零"),
     }
 
-    // 常用的 Option 方法
-    let x: Option<i32> = Some(5);
-
-    println!("{}", x.unwrap());           // 5（None 时 panic，不推荐生产代码用）
-    println!("{}", x.unwrap_or(0));       // 5（None 时返回默认值 0，推荐）
-    println!("{}", x.unwrap_or_else(|| { // None 时调用闭包计算默认值
-        println!("计算默认值...");
-        42
-    }));
-
-    // map：对 Some 中的值做变换，None 直接传透
-    let doubled = x.map(|v| v * 2);
-    println!("{:?}", doubled); // Some(10)
-
-    // and_then：链式处理，也叫 flatMap
-    let parsed: Option<i32> = Some("42").and_then(|s| s.parse().ok());
-    println!("{:?}", parsed); // Some(42)
-
-    // ?  运算符（在返回 Option 的函数中）
-    // 若为 None 则提前返回 None，类似 Result 中的 ?
+    // 或者用更简洁的 if let
+    if let Some(result) = divide(10.0, 0.0) {
+        println!("结果: {}", result);
+    } else {
+        println!("除数不能为零");
+    }
 }
 ```
 
-**`Option` 和 `null` 的根本区别**：`Option<T>` 是一个独立的类型，`T` 和 `Option<T>` 完全不同。你不能在需要 `i32` 的地方传入 `Option<i32>`，必须先解包。这强制你处理"没有值"的情况，而不是等到运行时崩溃。
+`Option<T>` 和 `T` 是两种不同的类型。你不能把 `Option<i32>` 当 `i32` 使用，必须先解包。这就是"强制处理"：要么用 `match`，要么用 `if let`，要么用各种辅助方法。
 
-## Result\<T, E\>：类型化的错误处理
-
-`Result` 是 Rust 错误处理的核心，用于表示"操作要么成功，要么失败"：
+常用辅助方法：
 
 ```rust
-// enum Result<T, E> {
-//     Ok(T),  // 成功，携带返回值
-//     Err(E), // 失败，携带错误信息
-// }
+fn main() {
+    let a: Option<i32> = Some(5);
+    let b: Option<i32> = None;
 
-use std::num::ParseIntError;
+    // unwrap_or：有值返回值，None 返回默认值
+    println!("{}", a.unwrap_or(0)); // 5
+    println!("{}", b.unwrap_or(0)); // 0
 
-fn parse_number(s: &str) -> Result<i32, ParseIntError> {
-    s.trim().parse::<i32>() // .parse() 本身就返回 Result
+    // map：有值时转换，None 原样传递
+    let doubled = a.map(|x| x * 2); // Some(10)
+    println!("{:?}", doubled);
+
+    // unwrap：有值返回值，None 时 panic（只在确定有值时用）
+    println!("{}", a.unwrap()); // 5
+    // b.unwrap(); // panic！
+}
+```
+
+## Result：用类型替代异常
+
+Java/Python 用异常处理错误：错误从发生点沿调用栈往上抛，任何中间层不处理的话会一直传播，最终可能导致程序崩溃。问题是异常是隐式的，看函数签名看不出它会不会抛，容易漏处理。
+
+Rust 用 `Result<T, E>` 枚举显式表示可能失败的操作：
+
+```rust
+enum Result<T, E> {
+    Ok(T),  // 成功，携带结果值
+    Err(E), // 失败，携带错误信息
+}
+```
+
+标准库所有可能失败的函数都返回 `Result`。调用者必须处理两种情况，否则编译器会警告（忽略 `Result` 是告警）：
+
+```rust
+use std::fs;
+use std::io;
+
+fn read_file_content(path: &str) -> Result<String, io::Error> {
+    fs::read_to_string(path)
 }
 
 fn main() {
-    // 必须处理 Err 才能拿到值
-    match parse_number("42") {
-        Ok(n)  => println!("解析成功: {}", n),
-        Err(e) => println!("解析失败: {}", e),
+    match read_file_content("config.txt") {
+        Ok(content) => println!("文件内容: {}", content),
+        Err(e)      => println!("读取失败: {}", e),
     }
-
-    match parse_number("abc") {
-        Ok(n)  => println!("解析成功: {}", n),
-        Err(e) => println!("解析失败: {}", e),
-    }
-
-    // ? 运算符：若为 Err 则提前返回，简化错误传播（第7篇详细介绍）
-    fn double_parse(s: &str) -> Result<i32, ParseIntError> {
-        let n = s.trim().parse::<i32>()?; // 失败时直接 return Err(e)
-        Ok(n * 2)
-    }
-
-    println!("{:?}", double_parse("21")); // Ok(42)
-    println!("{:?}", double_parse("x"));  // Err(...)
 }
 ```
 
-**`Result` 和异常（Exception）的区别**：
+`Result` 和 `Option` 的辅助方法类似：
 
-Java/Python 的异常是**隐式**的——一个函数可能抛出异常，但从函数签名上看不出来，调用者可能完全不知道需要处理。`Result` 是**显式**的——函数签名直接告诉你"我可能失败，失败时返回这个错误类型"，不处理就编译报错（不能对 `Result` 不管不顾）。
+```rust
+fn main() {
+    let result: Result<i32, &str> = Ok(42);
 
-Rust 的哲学：**错误是程序逻辑的一部分，应该在类型系统中明确表达，而不是隐藏在异常机制里。**
+    // unwrap_or：Ok 返回值，Err 返回默认值
+    println!("{}", result.unwrap_or(0));
+
+    // map：Ok 时转换值
+    let doubled = result.map(|x| x * 2);
+    println!("{:?}", doubled); // Ok(84)
+
+    // unwrap/expect：Ok 返回值，Err 时 panic
+    // expect 可以提供更有意义的 panic 信息
+    println!("{}", result.expect("计算失败"));
+}
+```
+
+`expect("msg")` 和 `unwrap()` 的区别只是 panic 信息。在你确定操作不会失败的地方（或者在快速的示例代码里），用 `expect` 给出一个有意义的失败原因比用 `unwrap` 更好。
+
+`?` 运算符是 `Result` 的语法糖，在返回 `Result` 的函数里使用时，`Err` 会立即被返回给调用者，`Ok` 则自动解包：
+
+```rust
+use std::fs;
+use std::io;
+
+fn process() -> Result<(), io::Error> {
+    let content = fs::read_to_string("a.txt")?; // 失败则提前返回 Err
+    let second  = fs::read_to_string("b.txt")?;
+    println!("{} {}", content, second);
+    Ok(())
+}
+```
+
+`?` 让错误处理代码干净很多，不需要每次都写 `match`。关于 `?` 的完整机制（`From` trait 的自动转换）会在错误处理章节详细介绍。

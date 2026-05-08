@@ -10,323 +10,319 @@ categories:
 draft: false
 ---
 
-## 前言
+## 模块系统
 
-这一章进入工程化视角。
+随着项目增大，把所有代码放进一个文件会让代码难以维护。Rust 提供了一套模块（module）系统来组织代码。
 
-**模块系统**解决"如何组织代码"的问题——如何把代码分成模块、文件、crate，如何控制可见性。
+### 模块的基本概念
 
-**智能指针**解决"所有权模型在复杂场景下不够用"的问题——有时你真的需要多个所有者，或者在不可变上下文里修改数据。Rust 通过智能指针在不破坏所有权原则的前提下，提供了这些能力。
+`mod` 关键字定义模块，模块可以嵌套。
 
----
-
-## Cargo 与项目结构
-
-Rust 的官方构建工具 Cargo 约定了标准目录结构：
+通用语法格式：
 
 ```text
-my_project/
-├── Cargo.toml        # 项目配置（类似 package.json）
-├── Cargo.lock        # 依赖版本锁定（自动生成，可执行程序应提交，库不提交）
-└── src/
-    ├── main.rs       # 可执行程序入口（bin crate 的根）
-    ├── lib.rs        # 库入口（lib crate 的根）
-    └── utils/
-        ├── mod.rs    # utils 模块的声明文件（Rust 2015 风格）
-        └── math.rs   # utils::math 子模块
-```
+// 在文件内直接定义模块
+mod 模块名 {
+    pub fn 公开函数() { ... }  // pub 使其对外可见
+    fn 私有函数() { ... }      // 默认私有，只有模块自身及子模块可访问
 
-`Cargo.toml` 示例：
-
-```toml
-[package]
-name    = "my_project"
-version = "0.1.0"
-edition = "2021"     # Rust 版次，影响部分语法和默认设置
-
-[dependencies]
-serde = { version = "1.0", features = ["derive"] } # 序列化/反序列化
-tokio = { version = "1",   features = ["full"] }   # 异步运行时
-rand  = "0.8"                                       # 随机数
-
-[dev-dependencies]
-# 只在测试和 benchmark 时引入的依赖
-```
-
-执行 `cargo add serde --features derive` 可以自动修改 `Cargo.toml` 并更新 `Cargo.lock`。
-
----
-
-## 模块系统（mod）
-
-### 模块树
-
-Rust 的模块系统组织成一棵树，根是 `crate`（`main.rs` 或 `lib.rs`）：
-
-```text
-crate (main.rs)
-├── geometry
-│   ├── Circle（pub struct）
-│   └── shapes（pub mod）
-│       └── square_area（pub fn）
-└── utils
-    └── math
-        ├── gcd（pub fn）
-        └── lcm（pub fn）
-```
-
-### 内联模块
-
-```rust
-// src/main.rs
-
-mod geometry {                          // 模块声明（内联）
-    pub struct Circle {                 // pub 表示对外可见
-        pub radius: f64,                // 字段也需要 pub 才能从外部访问
-    }
-
-    impl Circle {
-        pub fn new(radius: f64) -> Circle {
-            Circle { radius }
-        }
-
-        pub fn area(&self) -> f64 {
-            std::f64::consts::PI * self.radius * self.radius
-        }
-    }
-
-    pub mod shapes {                    // 嵌套模块
-        pub fn square_area(side: f64) -> f64 {
-            side * side
-        }
+    pub mod 子模块 {           // 子模块默认也是私有的
+        pub fn 子函数() { ... }
     }
 }
 
-use geometry::Circle;            // use 引入路径（类似 C++ 的 using）
-use geometry::shapes::square_area;
+// 声明外部文件模块（放在 main.rs 或 lib.rs 中）
+mod 模块名;   // 编译器去找 src/模块名.rs 或 src/模块名/mod.rs
+
+// 访问模块内容
+模块名::函数名();
+模块名::子模块::函数名();
+```
+
+```rust
+mod greetings {
+    pub fn hello() {
+        println!("hello");
+    }
+
+    pub mod formal {
+        pub fn greet(name: &str) {
+            println!("Good day, {}", name);
+        }
+    }
+}
 
 fn main() {
-    let c = Circle::new(5.0);
-    println!("圆面积: {:.2}", c.area());             // 78.54
-    println!("正方形面积: {:.2}", square_area(4.0)); // 16.00
+    greetings::hello();
+    greetings::formal::greet("Alice");
 }
 ```
 
-### 跨文件模块（Rust 2018+ 推荐方式）
+默认情况下，模块内的所有内容都是私有的，外部无法访问。`pub` 关键字把它公开。
 
-```rust
-// src/math.rs（模块文件，不需要 mod.rs）
-pub fn gcd(mut a: u64, mut b: u64) -> u64 {
-    while b != 0 {
-        let t = b; b = a % b; a = t;
-    }
-    a
-}
+### 可见性修饰符
 
-pub fn lcm(a: u64, b: u64) -> u64 {
-    a / gcd(a, b) * b
-}
-```
+Rust 的可见性比 `public`/`private` 更细粒度：
 
-```rust
-// src/main.rs
-mod math;         // 告诉编译器加载 src/math.rs 文件作为 math 模块
-
-use math::{gcd, lcm};
-
-fn main() {
-    println!("gcd(48, 18) = {}", gcd(48, 18)); // 6
-    println!("lcm(4, 6)   = {}", lcm(4, 6));   // 12
-}
-```
-
-### 可见性规则
+- `pub`：对所有人公开
+- `pub(crate)`：只在当前 crate（整个项目）内公开，外部库无法访问
+- `pub(super)`：只对父模块公开
+- `pub(in path)`：只对指定路径的模块公开
+- 无修饰（私有）：只在当前模块及其子模块内可用
 
 ```rust
 mod outer {
-    pub fn public_fn() {}       // crate 外可见
-    fn private_fn() {}          // 只有当前模块可见
+    pub(crate) fn crate_visible() {} // 整个 crate 可见
+    pub(super) fn parent_visible() {} // 只有 outer 的父模块可见
 
-    pub(crate) fn crate_fn() {} // 当前 crate 内可见，外部不可见
-    pub(super) fn super_fn() {} // 父模块可见
+    mod inner {
+        fn private() {}
 
-    pub mod inner {
-        pub fn inner_fn() {
-            super::private_fn(); // 子模块可以访问父模块的私有项
+        pub fn call_private() {
+            private(); // 子模块可以访问父模块的私有内容
         }
     }
 }
 ```
 
-### use 的常用写法
+结构体字段也需要单独标注 `pub`，仅 `pub struct` 不够：
 
 ```rust
-use std::collections::HashMap;                 // 引入单个
-
-use std::io::{self, Read, Write};              // 引入多个（self 表示 std::io 本身）
-
-use std::collections::HashMap as Map;          // 重命名（类似 Python 的 as）
-
-use std::io::prelude::*;                       // 引入全部 pub 项（谨慎，容易命名冲突）
-
-use crate::math::gcd;                          // 绝对路径（从当前 crate 根开始）
-use super::sibling_fn;                         // 相对路径（父模块）
+pub struct Config {
+    pub host: String,   // 公开
+    port: u16,         // 私有
+}
 ```
 
----
+枚举不同：`pub enum` 后，所有变体都自动公开（因为枚举的主要用途是模式匹配，私有变体会让 `match` 无法穷尽）。
+
+### 跨文件模块
+
+实际项目里模块分散在不同文件。有两种组织方式：
+
+**方式一**：`src/模块名.rs`，在 `src/main.rs` 或 `src/lib.rs` 里声明 `mod 模块名;`
+
+```
+src/
+├── main.rs
+├── greetings.rs   ← 模块内容在这里
+└── math.rs        ← 另一个模块
+```
+
+`main.rs`:
+```rust
+mod greetings; // 告诉编译器去找 greetings.rs 或 greetings/mod.rs
+mod math;
+
+fn main() {
+    greetings::hello();
+    println!("{}", math::add(1, 2));
+}
+```
+
+**方式二**：`src/模块名/mod.rs`，适合模块内还有子模块的情况：
+
+```
+src/
+├── main.rs
+└── network/
+    ├── mod.rs      ← 模块根文件（等同于 network.rs）
+    ├── tcp.rs      ← 子模块
+    └── udp.rs      ← 子模块
+```
+
+`network/mod.rs`:
+```rust
+pub mod tcp;
+pub mod udp;
+```
+
+### use 的各种写法
+
+通用语法格式：
+
+```text
+use 路径::名称;                      // 引入单个名称
+use 路径::{名称1, 名称2, self};      // 同前缀批量引入（self 引入路径本身）
+use 路径::*;                         // 通配符引入，通常只在测试模块里使用
+use 路径::名称 as 别名;              // 重命名，解决名称冲突
+pub use 路径::名称;                  // 重导出：外部代码可以通过当前模块访问此名称
+
+// 路径起点
+crate::模块::类型   // 绝对路径，从当前 crate 根开始
+super::模块::类型   // 相对路径，从父模块开始
+self::类型          // 相对路径，从当前模块开始（self:: 通常可省略）
+```
+
+```rust
+use std::collections::HashMap;          // 引入单个路径
+use std::io::{self, Read, Write};       // 同前缀，一次引入多个（self 引入 std::io 本身）
+use std::collections::*;                // 通配符引入，通常只在测试模块里用
+use std::collections::HashMap as Map;  // 重命名
+
+// 路径写法：绝对路径从 crate:: 开始，相对路径用 self:: 或 super::
+mod config {
+    pub fn load() {}
+}
+
+mod app {
+    use super::config; // super 指父模块，这里即 crate 根
+    pub fn start() {
+        config::load();
+    }
+}
+```
+
+`use` 引入的只在当前作用域有效，不会影响子模块。如果想让子模块也能用，用 `pub use`（重导出）：
+
+```rust
+pub use std::collections::HashMap; // 外部代码可以通过当前模块访问 HashMap
+```
 
 ## 智能指针
 
-Rust 的智能指针是实现了 `Deref` 和 `Drop` Trait 的结构体。
+Rust 的普通引用（`&T`、`&mut T`）只是指针，不拥有数据。智能指针是一类结构体，表现得像指针，但同时拥有数据（或额外的元数据）。标准库里最常用的有三种：`Box<T>`、`Rc<T>`、`RefCell<T>`。
 
-- **`Deref`**：让智能指针能像普通引用一样使用（`*p` 自动解引用）
-- **`Drop`**：在作用域结束时自动执行清理逻辑（RAII）
+所有智能指针都实现了两个关键 trait：
 
-### Box\<T\>：堆上分配
+`Deref`：让智能指针可以用 `*` 解引用，像普通引用一样使用。
 
-`Box<T>` 把一个值放到堆上，本质是一个指向堆内存的单一所有权指针——类比 C++ 的 `std::unique_ptr`：
+`Drop`：自定义当智能指针离开作用域时的清理逻辑（比如释放堆内存、减少引用计数）。
+
+### Box\<T\>：堆分配
+
+`Box<T>` 把值分配到堆上，在栈上只留一个指针。
+
+通用语法格式：
+
+```text
+let 变量: Box<类型> = Box::new(值);  // 把值移到堆上，栈上保存指针
+*变量                                // 通过 Deref 访问堆上的值
+```
+
+最常见的三个用途：
+
+**用途一**：递归类型需要已知大小，`Box` 是解法。
+
+Rust 在编译期需要知道每种类型占多少字节。递归类型（如链表、树）如果直接把自身作为字段，大小就会是无限的。把子节点包在 `Box` 里，只需存一个指针大小：
 
 ```rust
-fn main() {
-    let b = Box::new(5);
-    println!("b = {}", b); // Deref 自动解引用，像普通值一样用
-
-    // 用途1：大数据放堆上，避免栈溢出
-    let large = Box::new([0u8; 1_000_000]); // 1MB 不放栈上
-    println!("size: {}", large.len());
-}
-
-// 用途2：递归数据结构——编译器必须知道类型的大小
-// 这段代码无法编译：
-// enum BadList {
-//     Cons(i32, BadList), // 错误：BadList 的大小是无限的（包含自己）
-//     Nil,
-// }
-
-// 用 Box 修复：Box<List> 的大小固定（一个指针大小，8字节）
-#[derive(Debug)]
 enum List {
-    Cons(i32, Box<List>),
+    Cons(i32, Box<List>), // Box<List> 大小固定（一个指针），可以编译
     Nil,
 }
 
 fn main() {
-    use List::{Cons, Nil};
-    let list = Cons(1, Box::new(Cons(2, Box::new(Cons(3, Box::new(Nil))))));
-    println!("{:?}", list);
+    let list = List::Cons(1, Box::new(List::Cons(2, Box::new(List::Nil))));
 }
 ```
 
-**Deref 强制转换（Deref Coercion）**：当类型实现了 `Deref` 时，`&Box<T>` 可以自动转换为 `&T`，`&String` 可以转换为 `&str`，`&Vec<T>` 可以转换为 `&[T]`。这就是为什么接受 `&str` 的函数可以传入 `&String`。
+**用途二**：有时想存大型数据到堆上，避免在栈上大量复制。
 
-### Rc\<T\>：引用计数，多个所有者
+**用途三**：`Box<dyn Trait>` 实现动态分发，见第 6 章。
 
-`Rc<T>`（Reference Counting）允许多个变量共同拥有同一份数据，类比 C++ 的 `std::shared_ptr`：
+```rust
+fn main() {
+    let x = Box::new(42); // 42 存在堆上
+    println!("{}", *x);   // Deref 解引用，和 42 一样用
+
+    // 离开作用域时，Box 的 Drop 自动释放堆内存
+}
+```
+
+### Deref 强制转换
+
+实现了 `Deref` 的类型，在需要引用的地方会自动解引用，这叫 Deref 强制转换（Deref coercion）：
+
+```rust
+fn print(s: &str) {
+    println!("{}", s);
+}
+
+fn main() {
+    let s = Box::new(String::from("hello"));
+    print(&s); // Box<String> → &String → &str，自动完成两次 Deref
+}
+```
+
+这就是为什么 `String` 可以在需要 `&str` 的地方使用——`String` 实现了 `Deref<Target = str>`，引用时自动转换。
+
+### Rc\<T\>：引用计数
+
+普通所有权规则是一个值只有一个所有者。`Rc<T>`（Reference Counted）允许**多个所有者**：它在堆上记录有多少个 `Rc` 指针指向同一份数据，当计数降为零时才释放数据。
 
 ```rust
 use std::rc::Rc;
 
 fn main() {
-    let data = Rc::new(String::from("共享的数据"));
-    println!("初始引用计数: {}", Rc::strong_count(&data)); // 1
+    let shared = Rc::new(vec![1, 2, 3]);
+    let clone1 = Rc::clone(&shared); // 只复制指针和增加计数，不复制数据
+    let clone2 = Rc::clone(&shared);
 
-    let clone1 = Rc::clone(&data); // 克隆指针（不克隆数据），引用计数 +1
-    let clone2 = Rc::clone(&data);
-    println!("克隆后引用计数: {}", Rc::strong_count(&data)); // 3
+    println!("引用计数: {}", Rc::strong_count(&shared)); // 3
+    println!("{:?}", clone1);
 
-    println!("{}", data);   // "共享的数据"
-    println!("{}", clone1); // "共享的数据"
-    println!("{}", clone2); // "共享的数据"
-
-    drop(clone2);
-    println!("drop 一个后: {}", Rc::strong_count(&data)); // 2
-} // data 和 clone1 离开作用域，引用计数降到 0，数据被释放
+    drop(clone1);
+    println!("引用计数: {}", Rc::strong_count(&shared)); // 2
+}
+// shared 和 clone2 离开作用域，计数降为 0，数据释放
 ```
 
-**内部实现**：`Rc<T>` 在堆上分配一块内存，里面存：数据本身、强引用计数、弱引用计数。每次 `clone` 只是把强引用计数 +1（很快，O(1)），每次 `drop` 强引用计数 -1，降到 0 时释放内存。
+`Rc<T>` **不是线程安全的**。它的引用计数用普通整数加减，没有原子操作保护。如果在多线程里共享，用线程安全版本 `Arc<T>`（Atomic Reference Counted）。
 
-**重要限制**：`Rc<T>` 是**非线程安全**的（引用计数操作不是原子的）。多线程环境必须用 `Arc<T>`（Atomic Reference Counting），用法完全相同，只是内部用原子操作保证线程安全，开销略高。
+`Rc<T>` 的限制：只允许不可变借用。多个所有者同时可变会引发数据竞争，这和借用规则冲突。
 
-### RefCell\<T\>：内部可变性（运行时借用检查）
+### RefCell\<T\>：内部可变性
 
-默认情况下，如果你有一个不可变引用 `&T`，你无法修改 `T`。`RefCell<T>` 把这个限制**从编译期推迟到运行期**：
+借用规则在**编译期**检查。`RefCell<T>` 把检查推迟到**运行时**，允许你在只有不可变引用的情况下修改内部数据——这叫内部可变性（interior mutability）。
 
 ```rust
 use std::cell::RefCell;
 
 fn main() {
-    // RefCell 包裹的数据，即使 cell 本身是不可变的，内部也可以修改
-    let cell = RefCell::new(vec![1, 2, 3]);
+    let data = RefCell::new(vec![1, 2, 3]);
 
-    // borrow() 返回不可变引用 Ref<T>（类似 &T），引用计数 +1
-    println!("{:?}", cell.borrow()); // [1, 2, 3]
+    {
+        let mut d = data.borrow_mut(); // 运行时检查：此时没有其他借用，允许
+        d.push(4);
+    } // 可变借用在这里释放
 
-    // borrow_mut() 返回可变引用 RefMut<T>（类似 &mut T）
-    cell.borrow_mut().push(4);
-    println!("{:?}", cell.borrow()); // [1, 2, 3, 4]
-
-    // 运行时仍然强制执行借用规则，违反时 panic（而不是编译错误）
-    let r1 = cell.borrow();
-    // let r2 = cell.borrow_mut(); // 运行时 panic：已有不可变借用，不能可变借用
-    println!("{:?}", r1);
-} // r1 离开作用域，borrow 引用释放
+    let d = data.borrow(); // 不可变借用，此时没有可变借用存在，允许
+    println!("{:?}", d);
+}
 ```
 
-**什么时候用 RefCell？** 当你知道代码在逻辑上是正确的，但编译器的静态借用检查"过于保守"，拒绝了实际上安全的代码。典型场景：实现图数据结构、mock 对象测试、某些设计模式需要"内部状态修改但外部接口不可变"。
+`borrow()` 和 `borrow_mut()` 返回的是 `Ref<T>` 和 `RefMut<T>` 智能指针，内部维护一个借用计数。如果在已有可变借用的情况下再借用，**运行时 panic**（而不是编译错误）。
 
-### Rc\<RefCell\<T\>\>：单线程共享可变数据
+### Rc\<RefCell\<T\>\>：共享可变数据
 
-这是单线程下"共享 + 可变"的经典组合：
+`Rc` 提供多所有者，`RefCell` 提供内部可变性，组合起来就得到"多个地方可以共享并修改的数据"：
 
 ```rust
 use std::rc::Rc;
 use std::cell::RefCell;
 
-#[derive(Debug)]
-struct Node {
-    value:    i32,
-    children: Vec<Rc<RefCell<Node>>>,
-}
-
-impl Node {
-    fn new(value: i32) -> Rc<RefCell<Node>> {
-        Rc::new(RefCell::new(Node { value, children: vec![] }))
-    }
-}
-
 fn main() {
-    let root   = Node::new(1);
-    let child1 = Node::new(2);
-    let child2 = Node::new(3);
+    let shared = Rc::new(RefCell::new(0));
 
-    // root 和 child1 都持有 child2 的引用（多所有者）
-    root.borrow_mut().children.push(Rc::clone(&child1));
-    root.borrow_mut().children.push(Rc::clone(&child2));
-    child1.borrow_mut().children.push(Rc::clone(&child2)); // 菱形引用
+    let a = Rc::clone(&shared);
+    let b = Rc::clone(&shared);
 
-    println!("root 的第一个子节点值: {}", child1.borrow().value);
-    // 修改 child2，所有指向它的引用都看到变化
-    child2.borrow_mut().value = 99;
-    println!("{:#?}", root);
+    *a.borrow_mut() += 10;
+    *b.borrow_mut() += 20;
+
+    println!("{}", shared.borrow()); // 30
 }
 ```
 
-### 智能指针速查
+这个组合在单线程场景里很常见，比如多个节点互相引用的图结构，或者回调函数修改外部状态。多线程场景用 `Arc<Mutex<T>>`，见下一章。
 
-| 类型 | 所有权 | 可变性 | 线程安全 | C++ 对应 |
-|------|--------|--------|----------|---------|
-| `Box<T>` | 单一 | 普通借用规则 | ✅ | `unique_ptr` |
-| `Rc<T>` | 共享 | 只读 | ❌ | `shared_ptr`（单线程）|
-| `Arc<T>` | 共享 | 只读 | ✅ | `shared_ptr` |
-| `RefCell<T>` | 单一 | 内部可变（运行时检查） | ❌ | 无直接对应 |
-| `Cell<T>` | 单一 | 内部可变（Copy 类型） | ❌ | 无直接对应 |
-| `Rc<RefCell<T>>` | 共享 | 内部可变 | ❌ | `shared_ptr` + 手动 |
-| `Arc<Mutex<T>>` | 共享 | 互斥锁 | ✅ | `shared_ptr<mutex<T>>` |
+### 三种智能指针对比
 
-**选择指南（按需依次考虑）**：
+`Box<T>`：单一所有权，堆分配，编译期借用检查，无运行时开销。
 
-1. 直接用值（所有权转移）→ 最优，无额外开销
-2. 只需要借用 → `&T` / `&mut T`
-3. 需要堆上分配 → `Box<T>`
-4. 单线程多所有者 → `Rc<T>`；多线程 → `Arc<T>`
-5. 需要可变共享 → 加 `RefCell<T>`（单线程）或 `Mutex<T>`（多线程）
+`Rc<T>`：多个所有者（单线程），引用计数，不可变借用，计数操作有轻微开销。
+
+`RefCell<T>`：单一所有权，借用检查推迟到运行时，允许内部可变，借用时有少量运行时检查开销。
+
+选择时优先用普通引用，不够用再考虑 `Box`，再考虑 `Rc`，最后才考虑 `RefCell`。`RefCell` 把编译期保证换成了运行时保证，要谨慎使用。

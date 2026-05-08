@@ -3,7 +3,7 @@ title: "通用语言教程-Rust 篇【2】控制流"
 date: 2026-05-07T10:00:00+08:00
 timezone: UTC+8
 cover: https://blog.24toumy.top/coverimg/rust.png
-tags: ["Rust","基础语法","控制流"]
+tags: ["Rust","控制流","match"]
 categories:
   - 计算机语言
   - 通用语言
@@ -12,13 +12,23 @@ draft: false
 
 ## 前言
 
-Rust 的控制流语法乍看和 C++ 没什么区别——`if`、`while`、`for`，一眼认出。但越往里摸，越会发现藏着的机关：`if` 是表达式而不是语句，`match` 有编译期穷尽性检查，`for` 循环背后是完整的迭代器协议……这些都不是语法糖，而是语言设计哲学的体现。
+控制流决定了程序执行哪些代码、执行多少次。Rust 的控制流语法乍看和 C/C++ 很像，但有一些设计上的差异，用起来会有些意外——比如 `if` 和 `loop` 都可以作为表达式返回值，这在命令式语言里不太常见。
 
-这篇文章会把这些"隐藏规则"全部翻出来。
+## if / else
 
-## if / else：表达式，不是语句
+最基本的条件分支。**通用语法格式：**
 
-先说最熟悉的 `if`。
+```text
+if 条件表达式 {
+    // 条件为 true 时执行
+} else if 另一个条件 {
+    // 前面的条件都不满足、这个条件为 true 时执行
+    // （可以有零个或多个 else if 分支）
+} else {
+    // 以上所有条件都不满足时执行
+    // （else 分支可以省略）
+}
+```
 
 ```rust
 fn main() {
@@ -36,375 +46,374 @@ fn main() {
 }
 ```
 
-两点和 C++ 不同：条件**不需要括号**，但花括号 `{}` **必须写**，即使只有一行。这是 Rust 强制要求的，没有商量余地。
+和 C++ 不同的地方：条件不需要括号（当然加了也不报错，只是风格上不推荐），但花括号是必须的，哪怕分支只有一行也不能省。
 
-### if 是表达式意味着什么？
+### if 作为表达式
 
-在 C++/Java 里，`if` 是**语句（statement）**，执行后不产生值。但在 Rust 里，`if` 是**表达式（expression）**，整个 `if-else` 块可以有一个返回值：
+Rust 里的 `if` 不只是一条语句，它是一个**表达式**，整体可以产生一个值：
 
 ```rust
 fn main() {
     let x = 10;
-
-    // 这里 if-else 整体是一个表达式，赋值给 result
-    let result = if x > 5 { "大于5" } else { "不大于5" };
-    println!("{}", result); // 大于5
-
-    // 等价于其他语言的三元运算符：x > 5 ? "大于5" : "不大于5"
-    // Rust 没有专门的三元运算符，就是这么用 if 的
-    let y = if x % 2 == 0 { x / 2 } else { x * 3 + 1 };
-    println!("y = {}", y); // 5
+    let label = if x > 5 { "大" } else { "小" };
+    println!("{}", label);
 }
 ```
 
-**重要约束**：两个分支的类型必须一致。下面这个会编译报错：
+这等价于其他语言里的三元运算符。Rust 没有 `? :` 语法，用 `if-else` 表达式替代。
+
+两个分支必须是相同的类型，否则编译器不知道该给变量分配什么类型的内存：
 
 ```rust
-// 错误示例
-let z = if x > 5 { 42 } else { "hello" };
-// error[E0308]: `if` and `else` have incompatible types
-//   expected integer, found `&str`
+// 这段代码无法编译
+let result = if true { 42 } else { "hello" };
+// error: `if` and `else` have incompatible types
 ```
 
-为什么要这么严格？因为 `z` 的类型必须在编译期确定，Rust 是**静态类型语言**，变量类型不能在运行时发生变化。两个分支类型不同，编译器就不知道该给 `z` 分配多少内存。
+每个分支的最后一个表达式就是这个分支的值，注意不能加分号——加了分号就变成语句，返回的是 `()`（空元组）而不是那个值。
 
-## loop：唯一真正的无限循环
+## loop
 
-Rust 有三种循环结构，其中 `loop` 是最"底层"的：
+`loop` 是无限循环，必须用 `break` 退出。**通用语法格式：**
+
+```text
+loop {
+    // 循环体，无限执行
+    break;           // 退出循环
+    break 值;        // 退出循环，同时返回一个值（作为整个 loop 表达式的值）
+    continue;        // 跳过当前剩余代码，直接进入下一次循环
+}
+```
 
 ```rust
 fn main() {
     let mut count = 0;
-
     loop {
         count += 1;
         if count == 5 {
-            break; // 退出循环
+            break;
         }
         println!("count = {}", count);
     }
-    println!("循环结束，count = {}", count); // 5
+    println!("结束，count = {}", count);
 }
 ```
 
-### loop 也是表达式——break 可以携带返回值
-
-这是 `loop` 最有意思的地方：`break` 可以后跟一个值，使整个 `loop` 表达式产生那个值：
+`loop` 同样是表达式。`break` 后面可以带一个值，作为整个 `loop` 的返回值：
 
 ```rust
 fn main() {
-    let mut n = 0;
-
+    let mut attempts = 0;
     let result = loop {
-        n += 1;
-        if n == 10 {
-            break n * 2; // loop 表达式的返回值是 n * 2 = 20
+        attempts += 1;
+        if attempts == 3 {
+            break attempts * 10; // loop 表达式的值是 30
         }
     };
-
-    println!("result = {}", result); // 20
+    println!("result = {}", result); // 30
 }
 ```
 
-**这有什么实际用途？** 一个典型场景是"重试直到成功"：
+这个模式在"重试直到成功"的场景里很实用，成功时把结果通过 `break` 带出来，外部直接用 `let` 接收，不需要额外的中间变量。
 
-```rust
-fn try_connect() -> Result<String, ()> {
-    // 模拟：每次调用有 50% 概率成功
-    Ok("connected".to_string())
-}
+## while
 
-fn main() {
-    let connection = loop {
-        match try_connect() {
-            Ok(conn) => break conn, // 成功时将连接对象作为 loop 的返回值
-            Err(_)   => println!("连接失败，重试..."),
-        }
-    };
-    println!("连接成功: {}", connection);
+条件为真时持续循环，条件变假时退出。**通用语法格式：**
+
+```text
+while 条件表达式 {
+    // 每次循环开始前检查条件，为 true 则执行，为 false 则退出
+    continue; // 可选：跳过当前次剩余代码，回到条件检查
+    break;    // 可选：立刻退出循环
 }
 ```
 
-没有 `loop` 的返回值，这个模式就需要额外的 `Option` 变量来传递结果，代码更繁琐。
-
-## while：条件控制循环
-
-`while` 和其他语言基本一致，没什么特别的：
-
 ```rust
 fn main() {
-    let mut sum = 0;
-    let mut i = 1;
-
-    while i <= 100 {
-        sum += i;
-        i += 1;
+    let mut n = 1;
+    while n < 100 {
+        n *= 2;
     }
-    println!("1+2+...+100 = {}", sum); // 5050
+    println!("第一个不小于 100 的 2 的幂次：{}", n); // 128
+}
+```
 
-    // continue 跳过当前迭代
-    let mut j = 0;
-    while j < 10 {
-        j += 1;
-        if j % 2 == 0 {
-            continue; // 跳过偶数
+`continue` 跳过当前迭代，直接开始下一次：
+
+```rust
+fn main() {
+    let mut i = 0;
+    while i < 10 {
+        i += 1;
+        if i % 2 == 0 {
+            continue; // 偶数跳过
         }
-        print!("{} ", j); // 1 3 5 7 9
+        print!("{} ", i); // 只打印奇数
     }
     println!();
 }
 ```
 
-### 为什么没有 do-while？
-
-Rust 没有 `do-while` 语法。如果需要"先执行一次再判断条件"，可以用 `loop` + `break`：
+Rust 没有 `do-while`。需要"先执行一次再判断条件"时，用 `loop` 加 `break` 实现：
 
 ```rust
 fn main() {
     let mut x = 0;
     loop {
         x += 1;
-        println!("执行了: {}", x);
+        println!("执行了一次，x = {}", x);
         if x >= 3 { break; }
     }
-    // 等价于 C++ 的：do { x++; ... } while (x < 3);
 }
 ```
 
-## for：迭代器协议的语法糖
+## for 与迭代器
 
-`for` 是 Rust 中最常用的循环，但它和 C 风格的 `for(int i=0; i<n; i++)` 有本质区别。
+Rust 的 `for` 循环不是 C 风格的 `for(int i=0; i<n; i++)`，而是专门用于**遍历迭代器（Iterator）**的。所谓迭代器，就是一个能够按顺序产生一系列值的对象——数组、Vec、范围、字符串的字符等，都可以产生迭代器。
 
-**Rust 的 `for` 循环是迭代器协议的语法糖。**
+**通用语法格式：**
 
-具体来说，`for item in collection` 在编译器内部会展开成这样：
-
-```rust
-// 这段代码：
-for item in collection {
-    // ...
-}
-
-// 等价于：
-let mut iter = collection.into_iter(); // 调用 IntoIterator::into_iter()
-loop {
-    match iter.next() {          // 反复调用 Iterator::next()
-        Some(item) => { /* ... */ } // 有值就继续
-        None       => break,         // 没有值了就退出
-    }
+```text
+for 变量 in 迭代器 {
+    // 每次循环，变量绑定到迭代器产生的下一个值
+    // 迭代器耗尽时自动退出循环
 }
 ```
-
-所以 `for` 能遍历的任何东西，都必须实现 `IntoIterator` trait。这是统一的抽象，不是魔法。
 
 ```rust
 fn main() {
-    // 遍历数组（数组实现了 IntoIterator）
     let fruits = ["苹果", "香蕉", "橙子"];
     for fruit in fruits {
         println!("{}", fruit);
     }
+}
+```
 
-    // Range 也实现了 IntoIterator
-    for i in 1..10 {    // [1, 10) 左闭右开
+数字范围用 `..`（左闭右开）或 `..=`（左闭右闭）：
+
+```rust
+fn main() {
+    for i in 1..5 {   // 1, 2, 3, 4
         print!("{} ", i);
     }
     println!();
 
-    for i in 1..=10 {   // [1, 10] 左闭右闭
+    for i in 1..=5 {  // 1, 2, 3, 4, 5
         print!("{} ", i);
     }
     println!();
+}
+```
 
-    // 逆序：rev() 是迭代器适配器，将迭代方向反转
+逆序遍历用 `.rev()`：
+
+```rust
+fn main() {
     for i in (1..=5).rev() {
         print!("{} ", i); // 5 4 3 2 1
     }
     println!();
+}
+```
 
-    // enumerate()：同时获取索引和值
-    // 等价于 Python 的 enumerate()
+同时获取索引和值，用 `.enumerate()`：
+
+```rust
+fn main() {
     let colors = ["红", "绿", "蓝"];
-    for (index, color) in colors.iter().enumerate() {
-        println!("第 {} 个颜色是 {}", index, color);
+    for (i, color) in colors.iter().enumerate() {
+        println!("第 {} 个颜色是 {}", i, color);
     }
 }
 ```
 
-### `fruits` vs `&fruits` vs `fruits.iter()` 的区别
+### 遍历时的所有权问题
 
-遍历集合时有三种写法，区别很重要：
+遍历一个集合时有三种写法，行为不一样：
 
 ```rust
 fn main() {
     let v = vec![1, 2, 3];
 
-    // 1. for x in v         → 消耗 v（所有权移入循环），v 之后不可用
-    //    x 的类型：i32
+    // 写法一：直接遍历，v 的所有权被消耗，循环后 v 不可用
+    // for x in v { println!("{}", x); }
 
-    // 2. for x in &v        → 不可变借用，v 之后仍可用
-    //    x 的类型：&i32
+    // 写法二：遍历不可变引用，v 之后仍然可用
     for x in &v {
-        print!("{} ", x); // 1 2 3
+        println!("{}", x); // x 类型是 &i32
     }
-    println!("{:?}", v); // v 仍然有效
+    println!("v 还在: {:?}", v);
 
-    // 3. for x in &mut v    → 可变借用，可以修改元素
-    //    x 的类型：&mut i32
+    // 写法三：遍历可变引用，可以修改元素
     let mut v2 = vec![1, 2, 3];
     for x in &mut v2 {
-        *x *= 2; // 必须解引用才能修改
+        *x *= 2; // 解引用后修改
     }
     println!("{:?}", v2); // [2, 4, 6]
 }
 ```
 
-## 循环标签：精确控制嵌套循环
+这个所有权的问题在 Rust 3 篇里会详细解释，现在只需要记住：通常用 `&v` 遍历，这样不会消耗掉集合。
 
-嵌套循环中，`break` 和 `continue` 默认作用于**最内层**循环。如果要跳出外层循环，需要用**循环标签（loop label）**：
+## 循环标签
+
+嵌套循环里，`break` 和 `continue` 默认只作用于最内层循环。如果需要跳出外层循环，用**循环标签**：
 
 ```rust
 fn main() {
-    // 标签以 ' 开头
     'outer: for i in 0..5 {
         for j in 0..5 {
             if i + j == 6 {
-                println!("找到了: i={}, j={}", i, j);
-                break 'outer; // 直接退出 'outer 标记的循环
+                println!("找到: i={}, j={}", i, j);
+                break 'outer; // 直接退出外层循环
             }
-        }
-    }
-    // 输出：找到了: i=2, j=4（第一个满足 i+j==6 的组合）
-
-    // continue 同样可以配合标签
-    'outer2: for i in 0..3 {
-        for j in 0..3 {
-            if j == 1 {
-                continue 'outer2; // 跳过外层当前迭代（j=1时直接进入 i 的下一次迭代）
-            }
-            println!("i={}, j={}", i, j);
         }
     }
 }
 ```
 
-这类似 C++ 里用 `goto` 跳出嵌套循环，但 Rust 的标签语义更清晰——你明确指定了跳到哪一层，而不是跳到某个任意代码位置。
+标签以单引号开头，写在循环关键字前面，`break` 或 `continue` 后面跟上标签名就能精确控制跳到哪一层。
 
-## match：不只是强化版 switch
+## match 表达式
 
-`match` 是 Rust 最强大的控制流结构，但把它理解成"强化版 switch"是低估了它。
+`match` 是 Rust 最强大的控制流结构，也是区别于大多数语言的地方。表面看像是加强版的 `switch`，但本质上是一个**模式匹配（Pattern Matching）**系统——不只能匹配字面值，还能解构复杂数据结构、附加条件守卫等。
 
-### 基本用法
+**通用语法格式：**
+
+```text
+match 被匹配的值 {
+    模式1 => 表达式,                  // 单行分支，不需要花括号
+    模式2 => {                        // 多行分支，需要花括号
+        // 多行代码
+        表达式                        // 最后一行是这个分支的值（无分号）
+    },
+    模式3 | 模式4 => 表达式,          // | 表示"或"，匹配任意一个模式
+    模式 if 守卫条件 => 表达式,       // 附加守卫条件
+    _ => 表达式,                      // 通配符，匹配所有其他情况（必须放最后）
+}
+```
+
+`match` 是表达式，整体有一个值，可以赋给变量：
 
 ```rust
 fn main() {
     let day = 3;
 
-    let day_name = match day {
+    let name = match day {
         1 => "周一",
         2 => "周二",
         3 => "周三",
         4 => "周四",
         5 => "周五",
-        6 | 7 => "周末",   // | 表示"或"，多个模式共用同一个分支
+        6 | 7 => "周末",   // | 表示"或"
         _ => "无效",        // _ 通配符，匹配所有剩余情况
     };
-    println!("{}", day_name); // 周三
-
-    // match 同样是表达式，可以直接赋值
-    let score = 82;
-    let grade = match score {
-        90..=100 => "优秀",  // 范围模式（必须用 ..= 包含右端点）
-        75..=89  => "良好",
-        60..=74  => "及格",
-        _        => "不及格",
-    };
-    println!("{}", grade); // 良好
+    println!("{}", name); // 周三
 }
 ```
 
-### match 的穷尽性检查（Exhaustiveness Checking）
+每个分支是"模式 => 表达式"的形式。
 
-`match` 和 `switch` 最根本的区别不是语法，而是**编译器强制要求覆盖所有可能的情况**：
+### 穷尽性检查
+
+`match` 必须覆盖所有可能的情况。如果漏掉了某个分支，编译器报错：
 
 ```rust
-enum Direction {
-    North,
-    South,
-    East,
-    West,
-}
+enum Direction { North, South, East, West }
 
-fn describe(dir: Direction) -> &'static str {
-    match dir {
-        Direction::North => "向北",
-        Direction::South => "向南",
-        Direction::East  => "向东",
-        // 如果漏掉 West，编译器报错：
-        // error[E0004]: non-exhaustive patterns: `West` not covered
+fn describe(d: Direction) -> &'static str {
+    match d {
+        Direction::North => "北",
+        Direction::South => "南",
+        Direction::East  => "东",
+        // 忘了 West → 编译错误：non-exhaustive patterns: `West` not covered
     }
 }
 ```
 
-**编译器如何做到这一点？**
+这个机制在枚举新增变体时特别有用：所有用到这个枚举的 `match` 都会在编译时报错，强迫你处理新情况，而不是悄悄走进一个未处理的分支。
 
-对于枚举类型，编译器在编译期知道所有变体，检查 match 分支时就逐一核对。对于整数类型，必须有 `_` 通配符覆盖剩余值，否则同样报错。
+整数类型没有穷尽问题，但也必须要么列出所有值，要么用 `_` 通配符兜底：
 
-这一机制在实践中意义重大：当你给枚举添加一个新变体时，**所有用到该枚举的 match 都会在编译时报错**，强制你处理新情况，而不是悄悄走进未处理的分支。
+```rust
+fn main() {
+    let score = 82;
+    let grade = match score {
+        90..=100 => "优秀",
+        75..=89  => "良好",
+        60..=74  => "及格",
+        _        => "不及格", // 没有这行就报错
+    };
+    println!("{}", grade);
+}
+```
 
-### match 中的模式解构
+### 解构
 
-`match` 不只是比较值，它还能**解构**复杂数据：
+`match` 的真正威力在于可以**解构**复杂的数据，把里面的值提取出来：
 
 ```rust
 fn main() {
     // 解构元组
-    let point = (3, -5);
+    let point = (1, -3);
     match point {
         (0, 0) => println!("原点"),
-        (x, 0) | (0, x) => println!("在坐标轴上: {}", x),
-        (x, y) if x == y => println!("在对角线上: {}", x), // if 守卫（guard）
+        (x, 0) => println!("x 轴上，x = {}", x),
+        (0, y) => println!("y 轴上，y = {}", y),
         (x, y) => println!("({}, {})", x, y),
     }
 
-    // 解构枚举中携带的数据
-    enum Message {
-        Quit,
-        Move { x: i32, y: i32 },
-        Write(String),
-        Color(u8, u8, u8),
-    }
-
-    let msg = Message::Move { x: 10, y: 20 };
-    match msg {
-        Message::Quit              => println!("退出"),
-        Message::Move { x, y }    => println!("移动到 ({}, {})", x, y),
-        Message::Write(text)       => println!("写入: {}", text),
-        Message::Color(r, g, b)   => println!("颜色: ({}, {}, {})", r, g, b),
+    // 带 if 守卫（guard）：在模式匹配的基础上附加额外条件
+    let num = 7;
+    match num {
+        n if n < 0  => println!("负数: {}", n),
+        0           => println!("零"),
+        n if n < 10 => println!("个位数: {}", n),
+        n           => println!("大于等于 10: {}", n),
     }
 }
 ```
 
-### if let：只关心一种情况时的简写
+解构枚举变体里携带的数据：
 
-当你只想处理 `match` 中的某一个分支，其余全部忽略时，`if let` 是更简洁的写法：
+```rust
+enum Message {
+    Quit,
+    Move { x: i32, y: i32 },
+    Write(String),
+}
+
+fn process(msg: Message) {
+    match msg {
+        Message::Quit        => println!("退出"),
+        Message::Move {x, y} => println!("移动到 ({}, {})", x, y),
+        Message::Write(text) => println!("写入: {}", text),
+    }
+}
+```
+
+枚举和 `match` 是 Rust 数据建模的核心工具，后面几篇还会反复用到。
+
+## if let
+
+有时候只关心一种匹配情况，其余全部忽略，写完整的 `match` 显得冗余：
 
 ```rust
 fn main() {
     let num = Some(7);
 
-    // 完整 match 写法（其余分支什么都不做）
+    // 完整 match，None 分支什么都不做，纯粹为了让编译器满意
     match num {
         Some(n) => println!("有值: {}", n),
-        None    => {}    // 这个分支没什么意义，但 match 要求你写出来
+        None    => {}
     }
 
-    // 等价的 if let 写法
+    // if let：只处理 Some 的情况，更简洁
     if let Some(n) = num {
         println!("有值: {}", n);
     }
 
-    // if let 也可以带 else
+    // 也可以带 else
     if let Some(n) = num {
         println!("有值: {}", n);
     } else {
@@ -413,34 +422,19 @@ fn main() {
 }
 ```
 
-`if let` 本质上是 `match` 的语法糖，但用在"只关心一种情况"时更简洁，代码意图也更清晰。
+`if let` 是 `match` 的语法糖，两者等价。用哪个取决于你关心几种情况：只关心一种就用 `if let`，需要处理多种情况就用 `match`。
 
-### while let：循环直到匹配失败
+## while let
 
-类似 `if let`，还有 `while let`，常用于消耗一个 `Option` 或从 channel 接收消息：
+`while let` 的逻辑类似：只要模式匹配成功就继续循环，匹配失败时退出：
 
 ```rust
 fn main() {
     let mut stack = vec![1, 2, 3];
 
-    // pop() 返回 Option<T>：有元素返回 Some，空了返回 None
+    // pop() 返回 Option<T>，有元素时 Some，空时 None
     while let Some(top) = stack.pop() {
-        println!("{}", top); // 3 2 1（从末尾弹出）
+        println!("{}", top); // 3 2 1，从末尾弹出
     }
-    // stack.pop() 返回 None 时，while let 自动退出
 }
 ```
-
-## 小结
-
-| 结构 | 是否是表达式 | 典型场景 |
-|------|------------|---------|
-| `if` / `else` | ✅ 是 | 条件分支、替代三元运算符 |
-| `loop` | ✅ 是（break 带值） | 重试循环、无限服务循环 |
-| `while` | ❌ 否 | 条件控制的循环 |
-| `for` | ❌ 否 | 遍历迭代器（最常用） |
-| `match` | ✅ 是 | 模式匹配、穷尽性检查 |
-| `if let` | ✅ 是 | 只关心一种匹配情况 |
-| `while let` | ❌ 否 | 循环直到模式不匹配 |
-
-一个关键认知：Rust 中**表达式无处不在**，几乎所有控制结构都能产生值。这让代码可以写得非常紧凑——不需要专门的三元运算符，不需要额外的临时变量，`let x = if ... { ... } else { ... };` 就足够了。

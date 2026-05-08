@@ -1,5 +1,5 @@
 ﻿---
-title: "通用语言教程-Rust 篇【9】并发编程"
+title: "通用语言教程-Rust 篇【9】并发与异步"
 date: 2026-05-07T17:00:00+08:00
 timezone: UTC+8
 cover: https://blog.24toumy.top/coverimg/rust.png
@@ -10,108 +10,131 @@ categories:
 draft: false
 ---
 
-## 前言
+## 并发的挑战
 
-Rust 的并发编程是这门语言最有竞争力的特性之一。
+并发编程很难，原因主要有两个：数据竞争（两个线程同时读写同一块内存，没有同步）和死锁（两个线程各自持有对方需要的锁，互相等待）。这两类问题在运行时才会出现，难以复现，难以调试。
 
-其他语言里，并发 bug（数据竞争、死锁、use-after-free）大多只能在运行时发现，甚至在压测时才偶现。Rust 的所有权系统把很多这类问题直接挪到了编译期——**编译不通过，就不会有数据竞争**。
-
-这就是 Rust 的并发口号：**无畏并发（Fearless Concurrency）**。
-
----
+Rust 的所有权系统和类型系统在编译期就能阻止数据竞争，不需要在运行时做额外检查。这就是 Rust 常说的"无畏并发"（fearless concurrency）——编译通过了，就不会有数据竞争。
 
 ## 线程
 
-### 创建线程：thread::spawn
+Rust 使用操作系统原生线程（1:1 线程模型），每个 Rust 线程对应一个 OS 线程，没有绿色线程或协程（异步用 async/await 实现，不是线程）。
 
-Rust 使用 1:1 线程模型——每个 Rust 线程对应一个操作系统线程（和 Go 的 M:N 协程模型不同）：
+### 创建线程
+
+通用语法格式：
+
+```text
+use std::thread;
+
+// 创建线程
+let handle = thread::spawn(|| {
+    // 线程中执行的代码
+});
+
+// 如果闭包要使用外部变量，用 move 转移所有权进线程
+let handle = thread::spawn(move || {
+    // 可以使用 move 进来的外部变量
+});
+
+handle.join().unwrap(); // 阻塞当前线程，等待子线程结束
+```
 
 ```rust
 use std::thread;
 use std::time::Duration;
 
 fn main() {
-    // spawn 接受一个闭包，在新线程中执行
-    // 返回 JoinHandle<T>，T 是闭包的返回值类型
     let handle = thread::spawn(|| {
         for i in 1..=5 {
             println!("子线程: {}", i);
-            thread::sleep(Duration::from_millis(50)); // 让出 CPU 时间片
+            thread::sleep(Duration::from_millis(50));
         }
     });
 
     for i in 1..=3 {
         println!("主线程: {}", i);
-        thread::sleep(Duration::from_millis(50));
+        thread::sleep(Duration::from_millis(80));
     }
 
-    // join：阻塞当前线程，直到 handle 对应的线程执行完毕
-    // 类比 C++ 的 thread.join() / Java 的 thread.join()
-    handle.join().unwrap(); // 若子线程 panic，join 返回 Err
-    println!("所有线程结束");
+    handle.join().unwrap(); // 等待子线程完成，不调用 join 的话主线程结束时子线程会被强制终止
 }
 ```
 
-输出顺序不确定（取决于操作系统调度），但不会发生数据竞争——因为两个线程没有共享数据。
+`thread::spawn` 返回一个 `JoinHandle`，调用 `.join()` 会阻塞当前线程直到被等待的线程结束。`.join()` 返回 `Result`，如果子线程 panic 了，`join` 会得到 `Err`。
 
-### move 闭包：把数据所有权转入线程
+### move 闭包与线程
 
-如果子线程的闭包需要使用外部变量，必须用 `move` 将所有权转移进去：
+线程闭包里如果要用外部变量，必须用 `move` 把变量的所有权转移进闭包：
 
 ```rust
 use std::thread;
 
 fn main() {
-    let data = vec![1, 2, 3, 4, 5];
+    let data = vec![1, 2, 3];
 
-    let handle = thread::spawn(move || {
-        // move 把 data 的所有权转入这个线程
-        // 这样编译器确信：data 的生命周期和这个线程绑定，不会出现悬垂引用
-        println!("子线程数据: {:?}", data);
-        data.iter().sum::<i32>()
+    let handle = thread::spawn(move || { // 没有 move 会编译错误
+        println!("{:?}", data);
     });
 
-    // println!("{:?}", data); // 编译错误：data 已被移入子线程
+    // println!("{:?}", data); // data 的所有权已转移进线程，这里不能用了
 
-    let sum = handle.join().unwrap(); // 获取子线程返回值
-    println!("sum = {}", sum); // 15
+    handle.join().unwrap();
 }
 ```
 
-**为什么必须 move？** 子线程的生命周期可能比父线程更长，如果不转移所有权，父线程结束后 `data` 被释放，子线程还在访问它——悬垂引用。Rust 拒绝这种代码。
-
----
+原因是：新线程的生命周期可能比创建它的函数更长（如果你不等待它结束就返回）。如果只是借用，无法保证借用的数据在线程结束前仍然有效。`move` 语义把数据交给线程，保证线程拥有完整的生命周期控制权。
 
 ## 消息传递：Channel
 
-Rust 推崇通过消息传递来实现线程间通信，而不是共享内存。标准库提供了 `mpsc`（multi-producer, single-consumer，多生产者单消费者）通道：
+线程之间可以通过 channel 传递数据。Rust 标准库提供 `mpsc` channel（multiple producer, single consumer——多生产者，单消费者）。
+
+通用语法格式：
+
+```text
+use std::sync::mpsc;
+
+let (tx, rx) = mpsc::channel();  // tx 是发送端，rx 是接收端
+
+// 在线程里发送（转移值的所有权给接收方）
+tx.send(值).unwrap();
+
+// 接收
+let 值 = rx.recv().unwrap();  // 阻塞等待一个值（Err 表示所有 tx 都 drop 了）
+for 值 in rx { ... }          // 当迭代器用：循环接收，直到所有 tx 都被 drop
+
+// 多发送端（mpsc 的 "mp" 就是 multiple producer）
+let tx2 = tx.clone();          // clone tx，两个发送端指向同一个接收端
+```
+
+
 
 ```rust
 use std::thread;
 use std::sync::mpsc;
-use std::time::Duration;
 
 fn main() {
-    let (tx, rx) = mpsc::channel::<String>(); // 创建通道，tx 发送端，rx 接收端
+    let (tx, rx) = mpsc::channel(); // tx 是发送端，rx 是接收端
 
     thread::spawn(move || {
-        let messages = vec!["你好", "来自", "子线程"];
-        for msg in messages {
-            tx.send(msg.to_string()).unwrap(); // 发送（若接收方断开，返回 Err）
-            thread::sleep(Duration::from_millis(100));
+        let msgs = vec!["hello", "from", "thread"];
+        for msg in msgs {
+            tx.send(msg).unwrap();
         }
-        // tx 在此 drop（移入了闭包）→ 通道发送端关闭 → rx 知道没有更多消息了
+        // tx 在这里 drop，rx 的 recv 会在此后返回 Err
     });
 
-    // recv() 阻塞直到收到消息，通道关闭后 for 循环自然结束
-    for received in rx {
+    for received in rx { // rx 作为迭代器使用：接收直到 tx 关闭
         println!("收到: {}", received);
     }
-    println!("通道关闭，所有消息处理完毕");
 }
 ```
 
-### 多生产者（Multiple Producers）
+`send` 会转移值的所有权，发出去的值不能再在发送方使用。
+
+### 多生产者
+
+`tx` 可以通过 `clone` 创建多个发送端，都向同一个 `rx` 发消息：
 
 ```rust
 use std::thread;
@@ -119,52 +142,40 @@ use std::sync::mpsc;
 
 fn main() {
     let (tx, rx) = mpsc::channel();
+    let tx2 = tx.clone(); // 创建第二个发送端
 
-    for id in 0..3 {
-        let tx_clone = tx.clone(); // 克隆发送端（多生产者的关键）
-        thread::spawn(move || {
-            tx_clone.send(format!("线程 {} 的消息", id)).unwrap();
-        });
-    }
-    drop(tx); // 释放原始 tx
-    // 注意：必须显式 drop 原始 tx
-    // 否则 rx 会等待"原始 tx 发送的消息"，而它永远不会发，rx 的 for 循环永远不结束
+    thread::spawn(move || tx.send("from thread 1").unwrap());
+    thread::spawn(move || tx2.send("from thread 2").unwrap());
 
+    // 注意：必须在所有 tx 都 drop 后，rx 的循环才会结束
+    // 原始的 tx 已经 move 进线程，tx2 也是，主线程没有剩余 tx，所以 rx 会正确关闭
     for msg in rx {
         println!("{}", msg);
     }
 }
 ```
 
-**Channel 的内部结构**：`mpsc::channel` 是无界通道（发送方不阻塞，消息无限累积）。如果需要有界通道（背压机制，发送方在缓冲区满时阻塞），用 `mpsc::sync_channel(capacity)`。
+`rx` 的 `for` 循环会一直接收消息，直到所有 `tx`（包括 `clone` 出来的）都被 `drop`。如果主线程还持有一个 `tx`，循环就不会结束——这是初学者常见的陷阱。
 
----
+## 共享状态：Mutex
 
-## 共享内存：Mutex 与 Arc
-
-当确实需要多线程共享数据时，使用 `Arc<Mutex<T>>`：
-
-- `Arc<T>`：线程安全的引用计数（Atomic Reference Counting），和 `Rc<T>` 用法相同，但用原子操作保证线程安全
-- `Mutex<T>`：互斥锁，保证同一时刻只有一个线程能访问数据
+另一种并发模式是多线程共享数据，通过锁保证同时只有一个线程访问：
 
 ```rust
 use std::sync::{Arc, Mutex};
 use std::thread;
 
 fn main() {
-    let counter = Arc::new(Mutex::new(0i32)); // Arc 包 Mutex，Mutex 包数据
+    let counter = Arc::new(Mutex::new(0)); // Arc 是线程安全的引用计数，Mutex 保护数据
+
     let mut handles = vec![];
 
     for _ in 0..10 {
-        let counter = Arc::clone(&counter); // 克隆 Arc（引用计数 +1）
+        let c = Arc::clone(&counter);
         let handle = thread::spawn(move || {
-            let mut guard = counter.lock().unwrap();
-            // lock() 获取互斥锁，返回 MutexGuard<T>
-            // 若其他线程持有锁，当前线程阻塞
-            // unwrap()：若持有锁的线程 panic（锁中毒），返回 Err
-            *guard += 1;
-            // MutexGuard 实现了 Deref，*guard 解引用得到 i32
-        }); // guard 离开作用域 → Drop 自动释放锁（RAII）
+            let mut num = c.lock().unwrap(); // 获取锁，返回 MutexGuard
+            *num += 1;
+        }); // MutexGuard 在这里 drop，锁自动释放（RAII）
         handles.push(handle);
     }
 
@@ -172,160 +183,182 @@ fn main() {
         handle.join().unwrap();
     }
 
-    println!("最终计数: {}", *counter.lock().unwrap()); // 10
+    println!("结果: {}", *counter.lock().unwrap()); // 10
 }
 ```
 
-**与 C++ 对比**：C++ 中忘记 `mutex.unlock()` 是经典 bug，Rust 的 `MutexGuard` 基于 RAII，离开作用域**自动解锁**，这类 bug 在 Rust 中不存在。
+这里 `Rc<T>` 不能用，因为 `Rc` 的引用计数不是原子操作，不能跨线程。`Arc<T>` 是原子引用计数，专门为多线程设计。
 
-**死锁**：Rust 虽然防止了数据竞争，但**死锁**仍然可能发生（两个线程互相等待对方释放锁）。死锁是逻辑问题，不是类型系统能完全防止的。预防方法：始终以相同顺序获取多个锁；使用 `try_lock()` 代替 `lock()`。
+`Mutex::lock()` 返回 `LockResult<MutexGuard<T>>`。`MutexGuard` 实现了 `Deref`，可以直接通过它读写被保护的数据；实现了 `Drop`，离开作用域时自动释放锁。这就是 RAII——不需要手动解锁，不会忘记，不会锁住一半抛出异常然后永远不释放。
 
----
+### 死锁预防
 
-## 异步编程（async/await）
+死锁通常发生在两个线程以不同顺序请求多个锁的时候。Rust **不能在编译期检测死锁**，这是它并发安全的边界。预防方法：
 
-对于 **I/O 密集型任务**（网络请求、文件读写、数据库查询等），线程模型效率不高——大量线程大多在等待，浪费内存和上下文切换开销。异步编程用**少量线程**处理大量并发 I/O。
+保持一致的加锁顺序；尽可能缩小持锁范围（让 `MutexGuard` 尽早 `drop`）；避免在持锁时调用未知的代码（可能内部也加锁）。
 
-### Future trait：异步的底层机制
+## Send 与 Sync：编译期线程安全保证
 
-Rust 的 `async fn` 返回一个 **`Future`**。`Future` 是一个"可以被轮询的计算"：
+这是 Rust 无畏并发的底层机制，值得专门理解。
+
+`Send` 是一个标记 trait（没有任何方法），表示"这个类型的值可以安全地转移到另一个线程"。实现了 `Send` 的类型，所有权可以跨线程转移。
+
+`Sync` 也是标记 trait，表示"这个类型可以安全地从多个线程同时访问"。具体来说，`T: Sync` 等价于 `&T: Send`——对 `T` 的共享引用可以安全地在线程间传递。
+
+绝大多数类型都实现了 `Send` 和 `Sync`，编译器自动推导：如果一个结构体的所有字段都是 `Send`，结构体自动是 `Send`。
+
+几个重要例外：
+
+`Rc<T>` 不是 `Send` 也不是 `Sync`，因为引用计数不是原子操作，不能跨线程。这就是为什么线程里必须用 `Arc<T>`。
+
+`RefCell<T>` 是 `Send`（可以转移到另一个线程）但不是 `Sync`（不能同时从多个线程访问）。
+
+`Mutex<T>` 当 `T: Send` 时是 `Send + Sync`——锁保证了同时只有一个线程访问，所以共享引用是安全的。
+
+这一切检查都发生在编译期，不是运行时。如果你试图跨线程传递 `Rc` 或 `RefCell`，编译器会报错，告诉你这个类型没有实现 `Send`。这是 Rust 在语言层面消除了一整类数据竞争错误。
+
+## 异步编程
+
+线程适合 CPU 密集型任务，对于 IO 密集型任务（网络请求、文件读写，大量时间在等待），每个任务开一个线程开销太大。异步编程让一个线程可以在等待 IO 时去做其他事，大幅提升吞吐量。
+
+### Future trait
+
+Rust 的异步基础是 `Future` trait：
 
 ```rust
-// Future 的简化定义（概念）：
-trait Future {
+pub trait Future {
     type Output;
-    fn poll(&mut self, cx: &mut Context) -> Poll<Self::Output>;
-}
-
-enum Poll<T> {
-    Ready(T),    // 计算完成，返回值
-    Pending,     // 还没好，等会儿再 poll
+    fn poll(&mut self, cx: &mut Context<'_>) -> Poll<Self::Output>;
 }
 ```
 
-`async fn` 会被编译器展开成一个实现了 `Future` 的状态机（类似 C++ 协程的 `co_await` 原理）。
+`Future` 代表一个"还没完成的计算"。`poll` 方法询问它是否完成：返回 `Poll::Ready(value)` 表示完成了，返回 `Poll::Pending` 表示还没好，执行器会在适当时候再次 `poll`。
 
-**`Future` 是惰性的**——仅创建 Future 不会执行任何代码，必须有一个**运行时（executor）**来不断 `poll` 它，直到 `Ready`。这就是为什么需要 tokio 这样的异步运行时。
+异步函数会被编译器变成一个实现了 `Future` 的状态机，每个 `.await` 点是一个状态转移点。这个转换在编译期完成，运行时只是在正确的时机调用 `poll`，没有额外的动态分配（大多数情况下）。
 
-### 基本用法（需要 tokio 运行时）
+### async/await
+
+`async fn` 定义异步函数，`await` 挂起当前异步函数直到等待的 Future 完成。
+
+通用语法格式：
+
+```text
+// 定义异步函数（调用时不会立刻执行，返回一个 Future）
+async fn 函数名(参数: 类型) -> 返回类型 {
+    let 值 = 另一个异步函数().await;  // .await 挂起此函数，等对方完成
+    值
+}
+
+// 用 tokio 作为执行器（需要在 Cargo.toml 引入 tokio）
+#[tokio::main]
+async fn main() {
+    函数名(参数).await;
+}
+
+// 并发等待多个 Future（同时开始，等最慢的那个）
+let (结果1, 结果2) = tokio::join!(future1, future2);
+
+// 后台独立运行（类似异步版 thread::spawn）
+let handle = tokio::spawn(async { 值 });
+let 结果 = handle.await.unwrap();
+```
+
+```rust
+async fn fetch_data(url: &str) -> String {
+    // 假设 http_get 是某个返回 Future 的库函数
+    // http_get(url).await
+    format!("data from {}", url)
+}
+
+async fn process() {
+    let result = fetch_data("https://example.com").await;
+    println!("{}", result);
+}
+```
+
+`async fn` 返回的是一个 `Future`，调用时不会立刻执行，需要一个**执行器（executor）**来驱动它运行。标准库不提供执行器，需要用第三方 crate。
+
+### tokio：最流行的异步运行时
+
+`tokio` 是 Rust 生态里最广泛使用的异步运行时，提供执行器、异步 IO、定时器、channel 等：
 
 ```toml
-# Cargo.toml
 [dependencies]
 tokio = { version = "1", features = ["full"] }
 ```
 
 ```rust
-use tokio::time::{sleep, Duration};
-
-// async fn 返回 impl Future<Output = String>
-async fn fetch_data(id: u32) -> String {
-    sleep(Duration::from_millis(100)).await; // .await 暂停当前 Future，让出执行权
-    format!("数据 #{}", id)
+#[tokio::main] // 这个宏把 main 函数变成异步入口，设置 tokio 执行器
+async fn main() {
+    let result = fetch_something().await;
+    println!("{}", result);
 }
 
-// #[tokio::main] 宏把 async main 包装成普通 main，并启动 tokio 运行时
-#[tokio::main]
-async fn main() {
-    let result = fetch_data(1).await;
-    println!("{}", result); // 数据 #1
+async fn fetch_something() -> String {
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await; // 非阻塞等待
+    String::from("done")
 }
 ```
 
-`.await` 不会阻塞当前**线程**，只是暂停当前**异步任务**，让 tokio 的工作线程去执行其他任务。
+`#[tokio::main]` 展开后大致等价于：
 
-### 并发执行多个异步任务
+```rust
+fn main() {
+    tokio::runtime::Runtime::new()
+        .unwrap()
+        .block_on(async {
+            // 原来的 async main 内容
+        });
+}
+```
+
+### 并发执行多个 Future
+
+`.await` 是串行的：等前一个完成再开始下一个。如果想并发执行，用 `tokio::join!`：
 
 ```rust
 use tokio::time::{sleep, Duration};
 
 async fn task(name: &str, ms: u64) -> String {
     sleep(Duration::from_millis(ms)).await;
-    format!("任务 {} 完成（{}ms）", name, ms)
+    format!("{} done", name)
 }
 
 #[tokio::main]
 async fn main() {
-    // 顺序执行：总耗时 = 100 + 200 + 150 = 450ms
-    // let r1 = task("A", 100).await;
-    // let r2 = task("B", 200).await;
-    // let r3 = task("C", 150).await;
+    // 串行：总耗时 300ms
+    // let a = task("A", 100).await;
+    // let b = task("B", 200).await;
 
-    // 并发执行：总耗时 ≈ max(100, 200, 150) = 200ms
-    // join! 宏同时驱动多个 Future，等所有完成才继续
-    let (r1, r2, r3) = tokio::join!(
-        task("A", 100),
-        task("B", 200),
-        task("C", 150),
-    );
-    println!("{}", r1);
-    println!("{}", r2);
-    println!("{}", r3);
+    // 并发：总耗时约 200ms（最慢的那个）
+    let (a, b) = tokio::join!(task("A", 100), task("B", 200));
+    println!("{}", a);
+    println!("{}", b);
 }
 ```
 
-### 异步任务与错误处理
+`tokio::spawn` 可以把一个 Future 放到后台真正并发执行，返回 `JoinHandle`，类似线程：
 
 ```rust
-use tokio::task;
-
 #[tokio::main]
 async fn main() {
-    // spawn 把异步任务交给 tokio 的线程池，立即返回 JoinHandle
-    let mut handles = vec![];
+    let handle = tokio::spawn(async {
+        task("background", 200).await
+    });
 
-    for i in 0..5 {
-        let handle = task::spawn(async move {
-            sleep(tokio::time::Duration::from_millis(10)).await;
-            i * i // 任务的返回值
-        });
-        handles.push(handle);
-    }
+    task("foreground", 50).await; // 和后台任务同时运行
 
-    // await 每个 handle，获取结果
-    for handle in handles {
-        match handle.await {
-            Ok(result)  => println!("结果: {}", result),
-            Err(e)      => println!("任务失败: {}", e), // 任务 panic 时
-        }
-    }
+    let result = handle.await.unwrap(); // 等待后台任务完成
+    println!("{}", result);
 }
 ```
 
----
+### 异步中的 Send 约束
 
-## 并发模型对比
+`tokio::spawn` 要求 Future 是 `Send`，因为 tokio 的多线程执行器可能在不同线程上 `poll` 同一个 Future。如果 Future 捕获了非 `Send` 的值（比如 `Rc`），编译器会报错。这同样是编译期检查，不是运行时。
 
-| 场景 | 推荐方式 | 说明 |
-|------|----------|------|
-| CPU 密集计算 | `thread::spawn` | 充分利用多核 |
-| I/O 密集（网络/文件） | `async/await` + tokio | 高并发，低内存占用 |
-| 线程间传递数据 | `mpsc::channel` | 消息传递，无共享状态 |
-| 线程间共享数据 | `Arc<Mutex<T>>` | 互斥锁，谨慎避免死锁 |
-| 单线程共享可变数据 | `Rc<RefCell<T>>` | 无锁，运行时借用检查 |
+## 小结
 
----
+Rust 的并发安全来自两个层面：一是所有权和借用规则阻止了数据竞争；二是 `Send` 和 `Sync` 标记 trait 在类型系统层面确保了线程间传递的数据是安全的。
 
-## Send 与 Sync：线程安全的类型保证
-
-Rust 的线程安全不是靠约定，而是**类型系统保证**的。两个标记 Trait：
-
-- `Send`：类型的所有权可以安全地转移到另一个线程（`Rc<T>` 没有实现 `Send`，因为引用计数不是原子的）
-- `Sync`：类型可以安全地被多个线程同时通过引用访问（`Cell<T>` 没有实现 `Sync`）
-
-```rust
-fn require_send<T: Send>(val: T) {}
-fn require_sync<T: Sync>(val: T) {}
-
-fn main() {
-    let v = vec![1, 2, 3];
-    require_send(v); // Vec<i32> 实现了 Send ✅
-
-    use std::rc::Rc;
-    let rc = Rc::new(5);
-    // require_send(rc); // 编译错误：Rc<i32> 没有实现 Send ❌
-    // 这就是为什么 Rc<T> 不能跨线程传递——类型系统在编译期就拦截了
-}
-```
-
-这意味着：如果你的代码能编译通过，你写的并发代码就没有**数据竞争**。这不是运行时检查，是编译期保证。这就是 Rust 无畏并发的底气所在。
+线程模型（`thread::spawn` + `Mutex`/`channel`）适合 CPU 密集的并行计算；异步模型（`async`/`await` + tokio）适合 IO 密集的高并发服务。两种模型可以混用，tokio 本身就是多线程执行器，在多个 OS 线程上调度大量 async 任务。
