@@ -159,7 +159,7 @@ fn main() {
         .body(r#"{"key": "value"}"#)
         .build();
 
-    println!("{:#?}", req);
+    println!("{req:#?}");
 }
 ```
 

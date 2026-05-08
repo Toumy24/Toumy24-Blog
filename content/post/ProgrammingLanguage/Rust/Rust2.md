@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿---
+﻿﻿﻿﻿---
 title: "通用语言教程-Rust 篇【2】控制流"
 date: 2026-05-07T10:00:00+08:00
 timezone: UTC+8
@@ -148,7 +148,7 @@ fn main() {
         if i % 2 == 0 {
             continue; // 偶数跳过
         }
-        print!("{} ", i); // 只打印奇数
+        print!("{i} "); // 只打印奇数
     }
     println!();
 }
@@ -194,12 +194,12 @@ fn main() {
 ```rust
 fn main() {
     for i in 1..5 {   // 1, 2, 3, 4
-        print!("{} ", i);
+        print!("{i} ");
     }
     println!();
 
     for i in 1..=5 {  // 1, 2, 3, 4, 5
-        print!("{} ", i);
+        print!("{i} ");
     }
     println!();
 }
@@ -210,7 +210,7 @@ fn main() {
 ```rust
 fn main() {
     for i in (1..=5).rev() {
-        print!("{} ", i); // 5 4 3 2 1
+        print!("{i} "); // 5 4 3 2 1
     }
     println!();
 }

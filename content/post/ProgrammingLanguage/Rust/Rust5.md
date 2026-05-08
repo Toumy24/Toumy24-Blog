@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿---
+﻿﻿﻿﻿﻿---
 title: "通用语言教程-Rust 篇【5】常用集合类型"
 date: 2026-05-07T13:00:00+08:00
 timezone: UTC+8
@@ -173,20 +173,20 @@ fn main() {
 
     // 写法一：直接 for in 数组，得到每个元素（对 Copy 类型会复制值）
     for x in arr {
-        print!("{} ", x); // 10 20 30 40 50
+        print!("{x} "); // 10 20 30 40 50
     }
     println!();
 
     // 写法二：需要下标时，遍历 0..arr.len() 范围
     for i in 0..arr.len() {
-        print!("arr[{}]={} ", i, arr[i]);
+        print!("arr[{i}]={} ", arr[i]);
     }
     println!();
 
     // 写法三：同时获取下标和值，用 .iter().enumerate()
     for (i, &val) in arr.iter().enumerate() {
         // i 是 usize 类型的下标，val 是 i32 类型的元素值（& 解引用）
-        print!("{}:{} ", i, val);
+        print!("{i}:{val} ");
     }
     println!();
 }
@@ -264,7 +264,7 @@ fn main() {
     // 嵌套 for 循环遍历矩阵
     for row in &matrix {
         for val in row {
-            print!("{:3}", val); // 宽度 3，让各列对齐
+            print!("{val:3}"); // 宽度 3，让各列对齐
         }
         println!();
     }
@@ -361,7 +361,7 @@ fn main() {
 
     // 遍历不可变引用
     for x in &v {
-        print!("{} ", x);
+        print!("{x} ");
     }
     println!();
 
@@ -477,7 +477,7 @@ fn main() {
 fn main() {
     let s = String::from("你好世界");
     for c in s.chars() {
-        print!("{} ", c); // 你 好 世 界
+        print!("{c} "); // 你 好 世 界
     }
     println!();
     println!("字符数: {}", s.chars().count()); // 4

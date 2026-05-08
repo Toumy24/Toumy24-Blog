@@ -701,7 +701,7 @@ fn main() {
 
     // parse() 把字符串解析成指定类型，通过类型标注告诉它解析成什么
     let number: i32 = input.trim().parse().expect("请输入有效的整数");
-    println!("你输入了 {}，它的两倍是 {}", number, number * 2);
+    println!("你输入了 {number}，它的两倍是 {}", number * 2);
 }
 ```
 
@@ -725,7 +725,7 @@ fn main() {
     io::stdin().read_line(&mut input).expect("读取失败");
     let b: f64 = input.trim().parse().expect("无效数字");
 
-    println!("{} + {} = {}", a, b, a + b);
+    println!("{a} + {b} = {}", a + b);
 }
 
 ## 标准库（std）模块概览

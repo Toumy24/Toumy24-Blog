@@ -1,4 +1,4 @@
-﻿﻿---
+﻿---
 title: "通用语言教程-Rust 篇【10】迭代器"
 date: 2026-05-08T09:00:00+08:00
 timezone: UTC+8
@@ -192,7 +192,7 @@ fn main() {
 
     for (i, fruit) in fruits.iter().enumerate() {
         // i 是 usize 类型的下标，fruit 是 &&str 类型
-        println!("第 {} 个：{}", i + 1, fruit);
+        println!("第 {} 个：{fruit}", i + 1);
     }
 }
 ```
@@ -255,7 +255,7 @@ fn main() {
     // 对 Copy 类型，copied() 更常用（避免 clone 的语义，更明确是按位复制）
     let owned2: Vec<i32> = v.iter().copied().collect();
 
-    println!("{:?} {:?}", owned, owned2);
+    println!("{owned:?} {owned2:?}");
 }
 ```
 
@@ -427,7 +427,7 @@ fn main() {
 
     // 计算平均成绩
     let avg = data.iter().map(|(_, s)| s).sum::<i32>() as f64 / data.len() as f64;
-    println!("平均成绩：{:.1}", avg);
+    println!("平均成绩：{avg:.1}");
 }
 ```
 
