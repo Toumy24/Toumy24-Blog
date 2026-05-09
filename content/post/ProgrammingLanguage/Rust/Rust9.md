@@ -32,9 +32,9 @@ let handle = thread::spawn(|| {
     // 线程中执行的代码
 });
 
-// 如果闭包要使用外部变量，用 move 转移所有权进线程
+// 如果闭包要使用外部绑定，用 move 转移所有权进线程
 let handle = thread::spawn(move || {
-    // 可以使用 move 进来的外部变量
+    // 可以使用 move 进来的外部绑定
 });
 
 handle.join().unwrap(); // 阻塞当前线程，等待子线程结束
@@ -65,7 +65,7 @@ fn main() {
 
 ### move 闭包与线程
 
-线程闭包里如果要用外部变量，必须用 `move` 把变量的所有权转移进闭包：
+线程闭包里如果要用外部绑定，必须用 `move` 把绑定的所有权转移进闭包：
 
 ```rust
 use std::thread;
