@@ -59,7 +59,7 @@ edition = "2024"
 [dependencies]
 ```
 
-`[package]` 段描述这个包的基本信息。`name` 是包名，`version` 遵循语义化版本规范（主版本.次版本.补丁版本），`edition` 是 Rust 的"版次"——Rust 每隔几年会出一个新版次，每个版次可以引入一些不向后兼容的改进，目前默认使用 2024（`cargo new` 从 Rust 1.85 起自动生成 `edition = "2024"`）。2024 版次把 `gen` 正式列为关键字，部分旧库方法名因此做了改动（比如 `rand` 0.9+ 把 `gen` / `gen_range` 重命名），本教程所有示例均以 Rust 2024 为准。
+`[package]` 段描述这个包的基本信息。`name` 是包名，`version` 遵循语义化版本规范（主版本.次版本.补丁版本），`edition` 是 Rust 的"版次"——Rust 每隔几年会出一个新版次，每个版次可以引入一些不向后兼容的改进，目前默认使用 2024（`cargo new` 从 Rust 1.85 起自动生成 `edition = "2024"`）。2024 版次把 `gen` 正式列为关键字，因此 `rand` 在新版本里也同步调整了随机数 API；本教程所有示例均以 `rand` 0.10+ 和 Rust 2024 为准。
 
 `[dependencies]` 段列出这个项目依赖的第三方库。现在是空的，等会儿会用到。
 
@@ -91,17 +91,15 @@ rand = "0.10"
 添加依赖后，在代码里通过 `use` 语句引入需要的内容。比如用 `rand` 生成随机数：
 
 ```rust
-use rand::Rng; // 把 rand::Rng 这个 trait 引入当前作用域
+use rand::{rng, RngExt}; // 也可以写成 use rand::RngExt;
 
 fn main() {
-    // rand 0.9+：rand::rng() 获取线程本地 RNG（原 thread_rng()）
-    // gen_range 已改名为 random_range（gen 是 Rust 2024 的关键字）
-    let n: i32 = rand::rng().random_range(1..=100); // 生成 1 到 100 的随机整数
-    println!("随机数: {n}");
+    let randnum = rng().random_range(1..=100);
+    println!("生成的随机数为{randnum}");
 }
 ```
 
-`use` 语句的作用是把某个路径引入当前作用域，省去每次都写完整路径的麻烦。标准库的内容也是这样用的，后面读取键盘输入时会用到 `use std::io`。
+这里的 `rng()` 用来取得当前线程的随机数生成器，`random_range()` 则在指定区间内取值。如果你不想单独引入 `rng`，也可以直接写成 `rand::rng().random_range(1..=100)`。`use` 语句的作用是把某个路径引入当前作用域，省去每次都写完整路径的麻烦。标准库的内容也是这样用的，后面读取键盘输入时会用到 `use std::io`。
 
 有些内容不需要 `use` 就能直接用，比如 `println!`、`Vec`、`String`、`Option` 等——它们属于 Rust 的**预导入（prelude）**，编译器会自动引入每个文件。预导入的完整列表很短，其余一切都需要显式 `use`。
 
@@ -661,7 +659,7 @@ fn main() {
 引入外部库（已在 Cargo.toml 里声明了依赖）的方式完全相同，只是把 `std` 换成库名：
 
 ```rust
-use rand::Rng;
+use rand::RngExt;
 use serde::{Serialize, Deserialize};
 ```
 
@@ -801,7 +799,7 @@ serde_json = "1"
 
 **随机数**
 
-`rand`：随机数生成，从简单的随机整数到复杂的概率分布都有。0.9+ 版本适配 Rust 2024，`rand::rng()` 取代原来的 `thread_rng()`，方法名 `gen` / `gen_range` 改为 `random` / `random_range`。
+`rand`：随机数生成，从简单的随机整数到复杂的概率分布都有。`rand` 0.10+ 推荐配合 `use rand::{rng, RngExt};` 使用，然后通过 `rng().random()`、`rng().random_range()` 这类方法生成随机值；如果不单独引入 `rng`，也可以直接写 `rand::rng()`。
 
 **错误处理**
 
